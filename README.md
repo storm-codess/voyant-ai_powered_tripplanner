@@ -1,3 +1,12 @@
-﻿# Voyant-AI_powered_tripplanne
-More features and documentation coming soon
+# Voyant 🌍
+AI powered group travel planning app.
 
+## Tech Stack
+- FastAPI
+- PostgreSQL (Neon)
+- Groq AI
+- Resend
+- React + Tailwind
+
+## Setup
+coming soon
