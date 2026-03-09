@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base
+import app.models
 
 app = FastAPI(
     title="Voyant API",
@@ -20,7 +21,7 @@ app.add_middleware(
 async def startup():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
-    print("✅ Database connected successfully!")
+    print("✅ Database connected and tables created!")
 
 @app.get("/")
 async def root():
