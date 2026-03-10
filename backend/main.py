@@ -4,6 +4,7 @@ from app.database import engine, Base
 from app.firebase import get_current_user
 from app.api.users import router as users_router
 from app.api.trips import router as trips_router
+from app.api.preferences import router as preferences_router
 import app.models
 
 app = FastAPI(
@@ -22,6 +23,7 @@ app.add_middleware(
 
 app.include_router(users_router)
 app.include_router(trips_router)
+app.include_router(preferences_router)
 
 @app.on_event("startup")
 async def startup():
