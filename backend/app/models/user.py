@@ -10,7 +10,7 @@ class User(Base):
     email = Column(String, unique=True, nullable=False)
     name = Column(String, nullable=False)
     avatar_url = Column(String, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=datetime.utcnow)
     is_active = Column(Boolean, default=True)
 
     # relationships

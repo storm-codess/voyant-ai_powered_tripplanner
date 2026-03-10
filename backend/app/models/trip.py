@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey, Text, Enum
+from sqlalchemy import Column, String, DateTime, ForeignKey, Text, Enum, Boolean
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 import enum
@@ -16,16 +16,15 @@ class Trip(Base):
     name = Column(String, nullable=False)
     description = Column(Text, nullable=True)
     status = Column(Enum(TripStatus), default=TripStatus.planning)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=datetime.utcnow)
     updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
     creator_id = Column(String, ForeignKey("users.id"), nullable=False)
 
     # relationships
     creator = relationship("User", back_populates="created_trips")
     members = relationship("TripMember", back_populates="trip")
-    preferences = relationship("Preference", back_populates="trip")
     recommendations = relationship("Recommendation", back_populates="trip")
-    votes = relationship("Vote", back_populates="trip")
+    forms = relationship("Form", back_populates="trip")
 
 class TripMember(Base):
     __tablename__ = "trip_members"
@@ -34,7 +33,7 @@ class TripMember(Base):
     trip_id = Column(String, ForeignKey("trips.id"), nullable=False)
     user_id = Column(String, ForeignKey("users.id"), nullable=False)
     joined_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
-    is_admin = Column(String, default=False)
+    is_admin = Column(Boolean, default=False)
 
     # relationships
     trip = relationship("Trip", back_populates="members")

@@ -1,24 +1,50 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey, Enum
+from sqlalchemy import Column, String, DateTime, ForeignKey, Boolean, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
-import enum
 from app.database import Base
 
-class VoteCategory(enum.Enum):
-    destination = "destination"
-    hotel = "hotel"
-    activity = "activity"
+class VoteSession(Base):
+    __tablename__ = "vote_sessions"
+
+    id = Column(String, primary_key=True)
+    trip_id = Column(String, ForeignKey("trips.id"), nullable=False)
+    title = Column(String, nullable=False)
+    description = Column(Text, nullable=True)
+    status = Column(String, default="open")  # open, revote, closed
+    deadline = Column(DateTime, nullable=False)
+    revote_deadline = Column(DateTime, nullable=True)
+    winner_option_id = Column(String, nullable=True)
+    is_random_winner = Column(Boolean, default=False)
+    created_by = Column(String, ForeignKey("users.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # relationships
+    options = relationship("VoteOption", back_populates="session")
+    votes = relationship("Vote", back_populates="session")
+
+class VoteOption(Base):
+    __tablename__ = "vote_options"
+
+    id = Column(String, primary_key=True)
+    session_id = Column(String, ForeignKey("vote_sessions.id"), nullable=False)
+    option_text = Column(String, nullable=False)
+    option_description = Column(Text, nullable=True)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # relationships
+    session = relationship("VoteSession", back_populates="options")
+    votes = relationship("Vote", back_populates="option")
 
 class Vote(Base):
     __tablename__ = "votes"
 
     id = Column(String, primary_key=True)
-    trip_id = Column(String, ForeignKey("trips.id"), nullable=False)
+    session_id = Column(String, ForeignKey("vote_sessions.id"), nullable=False)
     user_id = Column(String, ForeignKey("users.id"), nullable=False)
-    recommendation_id = Column(String, ForeignKey("recommendations.id"), nullable=False)
-    category = Column(Enum(VoteCategory), nullable=False)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    option_id = Column(String, ForeignKey("vote_options.id"), nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
 
     # relationships
-    trip = relationship("Trip", back_populates="votes")
-    recommendation = relationship("Recommendation", back_populates="votes")
+    session = relationship("VoteSession", back_populates="votes")
+    option = relationship("VoteOption", back_populates="votes")

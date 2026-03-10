@@ -1,4 +1,4 @@
-from sqlalchemy import Column, String, DateTime, ForeignKey, JSON, Text
+from sqlalchemy import Column, String, DateTime, ForeignKey, JSON, Text, Integer
 from sqlalchemy.orm import relationship
 from datetime import datetime, timezone
 from app.database import Base
@@ -13,8 +13,8 @@ class Recommendation(Base):
     estimated_budget = Column(JSON, nullable=True)
     activities = Column(JSON, nullable=True)
     hotels = Column(JSON, nullable=True)
-    created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    version = Column(Integer, default=1)
+    created_at = Column(DateTime, default=datetime.utcnow)
 
     # relationships
     trip = relationship("Trip", back_populates="recommendations")
-    votes = relationship("Vote", back_populates="recommendation")
