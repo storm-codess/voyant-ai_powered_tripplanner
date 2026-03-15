@@ -5,6 +5,7 @@ from app.api.users import router as users_router
 from app.api.trips import router as trips_router
 from app.api.recommendations import router as recommendations_router
 from app.api.forms import router as forms_router
+from app.api.votes import router as votes_router
 from app.services.template_seeder import seed_templates
 import app.models
 
@@ -26,6 +27,7 @@ app.include_router(users_router)
 app.include_router(trips_router)
 app.include_router(recommendations_router)
 app.include_router(forms_router)
+app.include_router(votes_router)
 
 @app.on_event("startup")
 async def startup():
