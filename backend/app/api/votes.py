@@ -1,3 +1,5 @@
+from app.services.email_service import send_final_plan
+from app.models.user import User
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -290,6 +292,72 @@ async def get_vote_sessions(
 
     return {"trip_id": trip_id, "sessions": result}
 
+@router.post("/{trip_id}/send-final-plan")
+async def send_final_plan_email(
+    trip_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: dict = Depends(get_current_user)
+):
+    """Creator sends final plan email to all members"""
+
+    trip_result = await db.execute(select(Trip).where(Trip.id == trip_id))
+    trip = trip_result.scalar_one_or_none()
+    if not trip:
+        raise HTTPException(status_code=404, detail="Trip not found")
+    if trip.creator_id != current_user["uid"]:
+        raise HTTPException(status_code=403, detail="Only creator can send final plan")
+
+    sessions_result = await db.execute(
+        select(VoteSession).where(
+            VoteSession.trip_id == trip_id,
+            VoteSession.status == "closed"
+        )
+    )
+    sessions = sessions_result.scalars().all()
+    if not sessions:
+        raise HTTPException(status_code=400, detail="No closed vote sessions found")
+
+    final_plan = []
+    for session in sessions:
+        winner_text = None
+        if session.winner_option_id:
+            option_result = await db.execute(
+                select(VoteOption).where(VoteOption.id == session.winner_option_id)
+            )
+            winner_option = option_result.scalar_one_or_none()
+            if winner_option:
+                winner_text = winner_option.option_text
+        final_plan.append({
+            "title": session.title,
+            "winner": winner_text,
+            "is_random_winner": session.is_random_winner
+        })
+
+    members_result = await db.execute(
+        select(TripMember).where(TripMember.trip_id == trip_id)
+    )
+    members = members_result.scalars().all()
+
+    member_emails = []
+    for member in members:
+        user_result = await db.execute(
+            select(User).where(User.id == member.user_id)
+        )
+        user = user_result.scalar_one_or_none()
+        if user:
+            member_emails.append(user.email)
+
+    await send_final_plan(
+        members=member_emails,
+        trip_name=trip.name,
+        final_plan=final_plan
+    )
+
+    return {
+        "message": f"Final plan sent to {len(member_emails)} members",
+        "members_notified": member_emails
+    }
+
 @router.get("/{trip_id}/results")
 async def get_final_results(
     trip_id: str,
@@ -298,7 +366,6 @@ async def get_final_results(
 ):
     """Get all closed session results — the final plan"""
 
-    # check member
     member_result = await db.execute(
         select(TripMember).where(
             TripMember.trip_id == trip_id,
@@ -326,7 +393,6 @@ async def get_final_results(
             winner_option = option_result.scalar_one_or_none()
             if winner_option:
                 winner_text = winner_option.option_text
-
         final_plan.append({
             "title": session.title,
             "winner": winner_text,
