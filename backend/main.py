@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.database import engine, Base, AsyncSessionLocal
-from app.firebase import get_current_user
 from app.api.users import router as users_router
 from app.api.trips import router as trips_router
 from app.api.recommendations import router as recommendations_router
+from app.api.forms import router as forms_router
 from app.services.template_seeder import seed_templates
 import app.models
 
@@ -25,6 +25,7 @@ app.add_middleware(
 app.include_router(users_router)
 app.include_router(trips_router)
 app.include_router(recommendations_router)
+app.include_router(forms_router)
 
 @app.on_event("startup")
 async def startup():
@@ -32,7 +33,6 @@ async def startup():
         await conn.run_sync(Base.metadata.create_all)
     print("✅ Database connected and tables created!")
 
-    # seed templates
     async with AsyncSessionLocal() as db:
         await seed_templates(db)
 
