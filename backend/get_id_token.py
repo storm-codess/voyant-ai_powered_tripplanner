@@ -1,6 +1,6 @@
 import requests
 
-API_KEY = "AIzaSyBCrm5WLtGb1xwMhyA1dFSljkq_FmqiAlM"
+API_KEY = ""
 
 # sign in with email/password to get ID token
 response = requests.post(
