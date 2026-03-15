@@ -1,8 +1,7 @@
-```
-venv/
 .env
+firebase_credentials.json
+venv/
 __pycache__/
 *.pyc
-.DS_Store
-firebase_credentials.json
-```
+get_id_token.py
+test_token.py
