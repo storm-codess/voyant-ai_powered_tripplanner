@@ -11,12 +11,12 @@ class VoteSession(Base):
     title = Column(String, nullable=False)
     description = Column(Text, nullable=True)
     status = Column(String, default="open")  # open, revote, closed
-    deadline = Column(DateTime, nullable=False)
-    revote_deadline = Column(DateTime, nullable=True)
+    deadline = Column(DateTime(timezone=True), nullable=False)
+    revote_deadline = Column(DateTime(timezone=True), nullable=True)
     winner_option_id = Column(String, nullable=True)
     is_random_winner = Column(Boolean, default=False)
     created_by = Column(String, ForeignKey("users.id"), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     # relationships
     options = relationship("VoteOption", back_populates="session")
@@ -29,7 +29,7 @@ class VoteOption(Base):
     session_id = Column(String, ForeignKey("vote_sessions.id"), nullable=False)
     option_text = Column(String, nullable=False)
     option_description = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     # relationships
     session = relationship("VoteSession", back_populates="options")
@@ -42,8 +42,8 @@ class Vote(Base):
     session_id = Column(String, ForeignKey("vote_sessions.id"), nullable=False)
     user_id = Column(String, ForeignKey("users.id"), nullable=False)
     option_id = Column(String, ForeignKey("vote_options.id"), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     # relationships
     session = relationship("VoteSession", back_populates="votes")

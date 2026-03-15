@@ -13,9 +13,9 @@ class Form(Base):
     description = Column(Text, nullable=True)
     status = Column(String, default="draft")
     created_by = Column(String, ForeignKey("users.id"), nullable=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    published_at = Column(DateTime, nullable=True)
-    closed_at = Column(DateTime, nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    published_at = Column(DateTime(timezone=True), nullable=True)
+    closed_at = Column(DateTime(timezone=True), nullable=True)
 
     # relationships
     trip = relationship("Trip", back_populates="forms")
@@ -34,7 +34,7 @@ class FormQuestion(Base):
     is_required = Column(Boolean, default=True)
     order = Column(Integer, nullable=False)
     placeholder = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     # relationships
     form = relationship("Form", back_populates="questions")
@@ -47,8 +47,8 @@ class FormResponse(Base):
     form_id = Column(String, ForeignKey("forms.id"), nullable=False)
     user_id = Column(String, ForeignKey("users.id"), nullable=False)
     is_complete = Column(Boolean, default=False)
-    submitted_at = Column(DateTime, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    submitted_at = Column(DateTime(timezone=True), nullable=True)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     # relationships
     form = relationship("Form", back_populates="responses")
@@ -62,7 +62,7 @@ class Answer(Base):
     question_id = Column(String, ForeignKey("form_questions.id"), nullable=False)
     answer_text = Column(Text, nullable=True)
     answer_options = Column(JSON, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     # relationships
     response = relationship("FormResponse", back_populates="answers")

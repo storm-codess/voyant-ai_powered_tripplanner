@@ -16,8 +16,8 @@ class Trip(Base):
     name = Column(String, nullable=False)
     description = Column(Text, nullable=True)
     status = Column(Enum(TripStatus), default=TripStatus.planning)
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     creator_id = Column(String, ForeignKey("users.id"), nullable=False)
 
     # relationships
@@ -32,7 +32,7 @@ class TripMember(Base):
     id = Column(String, primary_key=True)
     trip_id = Column(String, ForeignKey("trips.id"), nullable=False)
     user_id = Column(String, ForeignKey("users.id"), nullable=False)
-    joined_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+    joined_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
     is_admin = Column(Boolean, default=False)
 
     # relationships

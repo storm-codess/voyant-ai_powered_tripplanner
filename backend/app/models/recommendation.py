@@ -14,7 +14,7 @@ class Recommendation(Base):
     activities = Column(JSON, nullable=True)
     hotels = Column(JSON, nullable=True)
     version = Column(Integer, default=1)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     # relationships
     trip = relationship("Trip", back_populates="recommendations")

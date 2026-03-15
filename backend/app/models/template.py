@@ -11,7 +11,7 @@ class Template(Base):
     description = Column(Text, nullable=True)
     icon = Column(String, nullable=True)
     is_custom = Column(Boolean, default=False)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     # relationships
     questions = relationship("TemplateQuestion", back_populates="template")
@@ -28,7 +28,7 @@ class TemplateQuestion(Base):
     is_required = Column(Boolean, default=True)
     order = Column(Integer, nullable=False)
     placeholder = Column(String, nullable=True)
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
 
     # relationships
     template = relationship("Template", back_populates="questions")
