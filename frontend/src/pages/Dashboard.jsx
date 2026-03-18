@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { signOut } from 'firebase/auth'
 import { auth } from '../services/firebase'
@@ -8,7 +8,9 @@ import emptyTravel from '../assets/empty-travel.jpg'
 import {
   Plus, LogOut, Users, MapPin,
   Clock, Star, Bell, Heart,
-  Calendar, ChevronRight, Search
+  Calendar, ChevronRight, Search,
+  Sparkles, Vote, ClipboardList,
+  ArrowRight, Zap
 } from 'lucide-react'
 
 import goaImg from '../assets/destinations/goa.jpg'
@@ -43,7 +45,7 @@ const PACKAGES = [
     duration: '3 Days 2 Nights', price: 8999, originalPrice: 10999,
     includes: ['Flight', 'Hotel', 'Breakfast'],
     rating: 4.8, reviews: 240, tag: 'Most Popular',
-    description: 'Sun-kissed beaches, vibrant nightlife, and Portuguese heritage. Perfect for groups seeking fun and relaxation on the coast.',
+    description: 'Sun-kissed beaches, vibrant nightlife, and Portuguese heritage.',
     location: 'North Goa, India'
   },
   {
@@ -51,7 +53,7 @@ const PACKAGES = [
     duration: '4 Days 3 Nights', price: 12999, originalPrice: 15999,
     includes: ['Hotel', 'All Meals', 'Adventure Sports'],
     rating: 4.7, reviews: 186, tag: 'Adventure',
-    description: 'Snow-capped peaks, river rafting and cozy cafes. An adventurous escape into the heart of the Himalayas.',
+    description: 'Snow-capped peaks, river rafting and cozy cafes in the Himalayas.',
     location: 'Himachal Pradesh, India'
   },
   {
@@ -59,7 +61,7 @@ const PACKAGES = [
     duration: '2 Days 1 Night', price: 6999, originalPrice: 8499,
     includes: ['Hotel', 'Breakfast', 'City Tour'],
     rating: 4.6, reviews: 312, tag: 'Cultural',
-    description: 'Royal palaces, majestic forts and vibrant bazaars in the Pink City. Immerse yourself in Rajasthani culture.',
+    description: 'Royal palaces, forts and bazaars in the Pink City.',
     location: 'Rajasthan, India'
   },
   {
@@ -67,7 +69,7 @@ const PACKAGES = [
     duration: '5 Days 4 Nights', price: 15999, originalPrice: 19999,
     includes: ['Flight', 'Houseboat', 'All Meals'],
     rating: 4.9, reviews: 428, tag: 'Nature',
-    description: 'Serene backwaters, lush green hills and Ayurvedic retreats. God\'s Own Country awaits your group.',
+    description: 'Serene backwaters, lush green hills and Ayurvedic retreats.',
     location: 'Kerala, India'
   }
 ]
@@ -81,7 +83,6 @@ export default function Dashboard() {
   const [trips, setTrips] = useState([])
   const [loading, setLoading] = useState(true)
   const [activeFilter, setActiveFilter] = useState('All Tours')
-  const [featuredPackage, setFeaturedPackage] = useState(PACKAGES[0])
   const [searchQuery, setSearchQuery] = useState('')
 
   useEffect(() => { fetchTrips() }, [])
@@ -100,6 +101,7 @@ export default function Dashboard() {
   }
 
   const firstName = user?.displayName?.split(' ')[0] || 'Traveller'
+  const activeTrip = trips[0] || null
 
   const statusColor = (status) => {
     if (status === 'planning') return '#c8e64c'
@@ -164,7 +166,6 @@ export default function Dashboard() {
         className="px-10 py-6 flex items-center justify-between"
         style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
       >
-        {/* left — single line heading with accent line */}
         <div className="flex items-center gap-4">
           <div
             className="w-1.5 rounded-full shrink-0"
@@ -178,7 +179,6 @@ export default function Dashboard() {
           </h2>
         </div>
 
-        {/* right — search bar aligned to page right */}
         <div className="flex items-center gap-3">
           <div
             className="flex items-center gap-3 px-5 py-3.5 rounded-2xl"
@@ -197,7 +197,6 @@ export default function Dashboard() {
               className="bg-transparent outline-none text-sm flex-1 text-white placeholder-white/30"
             />
           </div>
-
           <button
             className="p-3.5 rounded-2xl transition-opacity hover:opacity-80 shrink-0"
             style={{
@@ -218,26 +217,26 @@ export default function Dashboard() {
       <div className="px-10 pt-6 pb-8">
         <div className="grid grid-cols-12 gap-8">
 
-          {/* ── LEFT — Your Trips ── */}
+          {/* ── LEFT — YOUR TRIPS (primary) ── */}
           <div
-            className="col-span-12 lg:col-span-4 flex flex-col"
+            className="col-span-12 lg:col-span-5 flex flex-col"
             style={{ height: CONTENT_HEIGHT }}
           >
             {/* section header */}
             <div className="flex items-center justify-between mb-2">
               <div>
-                <p className="text-white font-semibold text-base">Recommended</p>
+                <p className="text-white font-semibold text-base">Your Trips</p>
                 <p className="text-xs mt-0.5" style={{ color: '#8a9e9e' }}>
-                  Discover handpicked trips for your group
+                  Manage and track your group adventures
                 </p>
               </div>
               <button
                 onClick={() => navigate('/trips/create')}
-                className="flex items-center gap-1 px-3 py-1.5 rounded-xl text-xs font-semibold transition-opacity hover:opacity-80"
-                style={{ backgroundColor: 'rgba(200,230,76,0.1)', color: '#c8e64c', border: '1px solid rgba(200,230,76,0.2)' }}
+                className="flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
+                style={{ backgroundColor: '#c8e64c', color: '#131a1a' }}
               >
-                <Plus size={12} />
-                New
+                <Plus size={14} />
+                New Trip
               </button>
             </div>
 
@@ -258,7 +257,7 @@ export default function Dashboard() {
               ))}
             </div>
 
-            {/* trips grid — scrollable */}
+            {/* trips grid */}
             <div
               className="flex-1 overflow-y-auto pr-1"
               style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(200,230,76,0.3) transparent' }}
@@ -273,13 +272,16 @@ export default function Dashboard() {
               ) : trips.length === 0 ? (
                 <div className="text-center py-12">
                   <img src={emptyTravel} alt="No trips" className="w-32 mx-auto mb-4 opacity-60" />
-                  <p className="text-sm mb-4" style={{ color: '#8a9e9e' }}>No trips yet</p>
+                  <p className="text-sm mb-2" style={{ color: '#8a9e9e' }}>No trips yet</p>
+                  <p className="text-xs mb-6" style={{ color: '#8a9e9e' }}>
+                    Create a trip, invite friends, let AI recommend the best destination
+                  </p>
                   <button
                     onClick={() => navigate('/trips/create')}
-                    className="px-5 py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
+                    className="px-6 py-3 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
                     style={{ backgroundColor: '#c8e64c', color: '#131a1a' }}
                   >
-                    Create First Trip
+                    Create First Trip →
                   </button>
                 </div>
               ) : (
@@ -289,7 +291,7 @@ export default function Dashboard() {
                       key={trip.id}
                       onClick={() => navigate(`/trips/${trip.id}`)}
                       className="relative rounded-2xl overflow-hidden cursor-pointer group"
-                      style={{ height: '180px' }}
+                      style={{ height: '200px' }}
                     >
                       <img
                         src={getTripImage(trip.name)}
@@ -298,7 +300,6 @@ export default function Dashboard() {
                       />
                       <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-transparent" />
 
-                      {/* status badge */}
                       <div
                         className="absolute top-3 left-3 px-2 py-0.5 rounded-full font-bold"
                         style={{ backgroundColor: 'rgba(200,230,76,0.9)', color: '#131a1a', fontSize: '9px' }}
@@ -309,7 +310,7 @@ export default function Dashboard() {
                       <div className="absolute bottom-3 left-3 right-3">
                         <p
                           className="text-white font-bold leading-tight mb-1"
-                          style={{ fontFamily: 'Bebas Neue, cursive', fontSize: '16px' }}
+                          style={{ fontFamily: 'Bebas Neue, cursive', fontSize: '18px' }}
                         >
                           {trip.name.length > 14 ? trip.name.substring(0, 14) + '...' : trip.name}
                         </p>
@@ -330,13 +331,13 @@ export default function Dashboard() {
                     onClick={() => navigate('/trips/create')}
                     className="relative rounded-2xl cursor-pointer flex items-center justify-center transition-all hover:opacity-80"
                     style={{
-                      height: '180px',
+                      height: '200px',
                       border: '2px dashed rgba(200,230,76,0.25)',
                       backgroundColor: 'rgba(200,230,76,0.04)'
                     }}
                   >
                     <div className="text-center">
-                      <Plus size={28} style={{ color: '#c8e64c' }} className="mx-auto mb-2" />
+                      <Plus size={32} style={{ color: '#c8e64c' }} className="mx-auto mb-2" />
                       <p className="text-sm font-semibold" style={{ color: '#c8e64c' }}>New Trip</p>
                     </div>
                   </div>
@@ -345,268 +346,273 @@ export default function Dashboard() {
             </div>
           </div>
 
-          {/* ── MIDDLE — Popular Packages ── */}
+          {/* ── MIDDLE — ACTIVE TRIP + AI STATUS (primary) ── */}
           <div
-            className="col-span-12 lg:col-span-5 flex flex-col"
+            className="col-span-12 lg:col-span-4 flex flex-col gap-4"
             style={{ height: CONTENT_HEIGHT }}
           >
-            <h3
-              className="text-2xl text-white mb-5 shrink-0"
-              style={{ fontFamily: 'Bebas Neue, cursive' }}
-            >
-              POPULAR PACKAGES
-            </h3>
-
-            <div
-              className="flex flex-col gap-5 overflow-y-auto pr-2 flex-1"
-              style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(200,230,76,0.3) transparent' }}
-            >
-              {PACKAGES.map(pkg => (
-                <div
-                  key={pkg.id}
-                  className="rounded-2xl overflow-hidden cursor-pointer transition-all hover:-translate-y-0.5 hover:shadow-xl shrink-0"
-                  style={{ backgroundColor: '#1a2222', border: '1px solid rgba(255,255,255,0.06)' }}
-                  onClick={() => {
-                    setFeaturedPackage(pkg)
-                    navigate(`/trips/create?destination=${pkg.destination}&duration=${pkg.duration}&budget=${pkg.price}`)
-                  }}
-                >
-                  <div className="flex">
-                    {/* image */}
-                    <div className="relative shrink-0 overflow-hidden" style={{ width: '160px', height: '180px' }}>
-                      <img
-                        src={pkg.image}
-                        alt={pkg.destination}
-                        className="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-r from-transparent to-black/20" />
-                      <div
-                        className="absolute top-3 left-3 px-2 py-1 rounded-full font-bold"
-                        style={{ backgroundColor: '#c8e64c', color: '#131a1a', fontSize: '10px' }}
-                      >
-                        {pkg.tag}
-                      </div>
-                    </div>
-
-                    {/* content */}
-                    <div className="flex-1 p-5">
-                      <div className="flex items-start justify-between mb-2">
-                        <div>
-                          <h4
-                            className="text-2xl text-white leading-none"
-                            style={{ fontFamily: 'Bebas Neue, cursive' }}
-                          >
-                            {pkg.destination}
-                          </h4>
-                          <p className="text-xs flex items-center gap-1 mt-1" style={{ color: '#8a9e9e' }}>
-                            <MapPin size={10} />
-                            {pkg.location}
-                          </p>
-                        </div>
-                        <div className="text-right shrink-0 ml-2">
-                          <p className="font-bold text-lg leading-none" style={{ color: '#c8e64c' }}>
-                            ₹{pkg.price.toLocaleString()}
-                          </p>
-                          <p className="text-xs line-through mt-0.5" style={{ color: '#8a9e9e' }}>
-                            ₹{pkg.originalPrice.toLocaleString()}
-                          </p>
-                          <p className="text-xs" style={{ color: '#8a9e9e' }}>/person</p>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="flex items-center gap-1">
-                          <Star size={11} fill="#c8e64c" color="#c8e64c" />
-                          <span className="text-xs font-semibold text-white">{pkg.rating}</span>
-                          <span className="text-xs" style={{ color: '#8a9e9e' }}>({pkg.reviews})</span>
-                        </div>
-                        <span className="text-xs flex items-center gap-1" style={{ color: '#8a9e9e' }}>
-                          <Clock size={10} />
-                          {pkg.duration}
-                        </span>
-                      </div>
-
-                      <p
-                        className="text-xs mb-4 leading-relaxed line-clamp-2"
-                        style={{ color: '#8a9e9e' }}
-                      >
-                        {pkg.description}
-                      </p>
-
-                      <div className="flex items-center justify-between">
-                        <div className="flex gap-1.5 flex-wrap">
-                          {pkg.includes.map((item, i) => (
-                            <span
-                              key={i}
-                              className="px-2 py-1 rounded-full"
-                              style={{
-                                backgroundColor: 'rgba(200,230,76,0.08)',
-                                color: '#c8e64c',
-                                border: '1px solid rgba(200,230,76,0.15)',
-                                fontSize: '10px'
-                              }}
-                            >
-                              {item}
-                            </span>
-                          ))}
-                        </div>
-                        <span
-                          className="text-xs font-semibold flex items-center gap-1 shrink-0 ml-2"
-                          style={{ color: '#c8e64c' }}
-                        >
-                          Plan this <ChevronRight size={12} />
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              ))}
+            <div>
+              <p className="text-white font-semibold text-base">Active Trip</p>
+              <p className="text-xs mt-0.5" style={{ color: '#8a9e9e' }}>
+                Your current trip status and actions
+              </p>
             </div>
-          </div>
 
-          {/* ── RIGHT — Featured ── */}
-          <div
-            className="col-span-12 lg:col-span-3 flex flex-col"
-            style={{ height: CONTENT_HEIGHT }}
-          >
-            <h3
-              className="text-2xl text-white mb-5 shrink-0"
-              style={{ fontFamily: 'Bebas Neue, cursive' }}
-            >
-              FEATURED
-            </h3>
-
-            <div
-              className="rounded-3xl overflow-hidden flex flex-col flex-1"
-              style={{ backgroundColor: '#1a2222', border: '1px solid rgba(255,255,255,0.06)' }}
-            >
-              {/* big image */}
-              <div className="relative shrink-0" style={{ height: '200px' }}>
-                <img
-                  src={featuredPackage.image}
-                  alt={featuredPackage.destination}
-                  className="w-full h-full object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
-                <button
-                  className="absolute top-4 right-4 p-2 rounded-full"
-                  style={{ backgroundColor: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(8px)' }}
+            {!activeTrip ? (
+              /* no trip — big CTA */
+              <div
+                className="rounded-3xl p-8 flex flex-col items-center justify-center text-center flex-1"
+                style={{
+                  backgroundColor: '#1a2222',
+                  border: '1px solid rgba(200,230,76,0.15)'
+                }}
+              >
+                <div
+                  className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5"
+                  style={{ backgroundColor: 'rgba(200,230,76,0.1)', border: '1px solid rgba(200,230,76,0.2)' }}
                 >
-                  <Heart size={15} color="white" />
-                </button>
-              </div>
-
-              {/* details */}
-              <div className="p-5 flex flex-col flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+                  <Zap size={28} style={{ color: '#c8e64c' }} />
+                </div>
                 <h4
-                  className="text-2xl text-white leading-none mb-1"
+                  className="text-3xl text-white mb-2"
                   style={{ fontFamily: 'Bebas Neue, cursive' }}
                 >
-                  {featuredPackage.destination.toUpperCase()}
+                  START PLANNING
                 </h4>
-                <p className="text-xs flex items-center gap-1 mb-4" style={{ color: '#8a9e9e' }}>
-                  <MapPin size={10} />
-                  {featuredPackage.location}
+                <p className="text-sm mb-6 leading-relaxed" style={{ color: '#8a9e9e' }}>
+                  Create a trip, invite your group, fill preferences and let AI recommend the perfect destination.
                 </p>
 
-                {/* member avatars */}
-                <div className="flex items-center gap-2 mb-3">
-                  <div className="flex -space-x-2">
-                    {[...Array(3)].map((_, i) => (
-                      <div
-                        key={i}
-                        className="w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs font-bold"
+                {/* steps */}
+                <div className="w-full flex flex-col gap-3 mb-6">
+                  {[
+                    { icon: Plus, label: 'Create a trip', step: '01' },
+                    { icon: Users, label: 'Invite your group', step: '02' },
+                    { icon: ClipboardList, label: 'Fill preferences', step: '03' },
+                    { icon: Sparkles, label: 'AI recommends', step: '04' },
+                    { icon: Vote, label: 'Group votes', step: '05' },
+                  ].map(({ icon: Icon, label, step }) => (
+                    <div
+                      key={step}
+                      className="flex items-center gap-3 px-4 py-3 rounded-xl text-left"
+                      style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}
+                    >
+                      <span
+                        className="text-xs font-bold shrink-0"
+                        style={{ color: '#c8e64c', fontFamily: 'Bebas Neue, cursive', fontSize: '16px' }}
+                      >
+                        {step}
+                      </span>
+                      <Icon size={14} style={{ color: '#8a9e9e' }} className="shrink-0" />
+                      <span className="text-sm text-white">{label}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <button
+                  onClick={() => navigate('/trips/create')}
+                  className="w-full py-4 rounded-2xl text-sm font-bold transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: '#c8e64c', color: '#131a1a' }}
+                >
+                  Create Your First Trip →
+                </button>
+              </div>
+            ) : (
+              /* active trip detail */
+              <div className="flex flex-col gap-4 flex-1 overflow-y-auto" style={{ scrollbarWidth: 'none' }}>
+                {/* trip card */}
+                <div
+                  className="rounded-3xl overflow-hidden"
+                  style={{ backgroundColor: '#1a2222', border: '1px solid rgba(255,255,255,0.06)' }}
+                >
+                  <div className="relative" style={{ height: '160px' }}>
+                    <img
+                      src={getTripImage(activeTrip.name)}
+                      alt={activeTrip.name}
+                      className="w-full h-full object-cover"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <h4
+                        className="text-3xl text-white leading-none"
+                        style={{ fontFamily: 'Bebas Neue, cursive' }}
+                      >
+                        {activeTrip.name.toUpperCase()}
+                      </h4>
+                    </div>
+                    <div className="absolute top-4 right-4">
+                      <span
+                        className="px-3 py-1 rounded-full text-xs font-bold"
                         style={{
-                          backgroundColor: ['#c8e64c', '#4a9e6b', '#e64c4c'][i],
-                          borderColor: '#1a2222',
-                          color: '#131a1a'
+                          backgroundColor: 'rgba(200,230,76,0.2)',
+                          color: '#c8e64c',
+                          border: '1px solid rgba(200,230,76,0.4)'
                         }}
                       >
-                        {['A', 'B', 'C'][i]}
-                      </div>
-                    ))}
-                    <div
-                      className="w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs"
-                      style={{ backgroundColor: '#2a3636', borderColor: '#1a2222', color: '#8a9e9e' }}
-                    >
-                      +2
+                        {activeTrip.status}
+                      </span>
                     </div>
                   </div>
-                  <p className="text-xs" style={{ color: '#8a9e9e' }}>Popular with groups</p>
-                </div>
-
-                <p className="text-xs leading-relaxed mb-4" style={{ color: '#8a9e9e' }}>
-                  {featuredPackage.description}
-                </p>
-
-                {/* trip stats */}
-                <div className="flex gap-2 mb-4">
-                  <div
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs flex-1 justify-center"
-                    style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
-                  >
-                    <Calendar size={11} style={{ color: '#c8e64c' }} />
-                    <span className="text-white text-xs">{featuredPackage.duration.split(' ').slice(0, 2).join(' ')}</span>
-                  </div>
-                  <div
-                    className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs flex-1 justify-center"
-                    style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
-                  >
-                    <Users size={11} style={{ color: '#c8e64c' }} />
-                    <span className="text-white text-xs">2-10 pax</span>
+                  <div className="p-4 grid grid-cols-2 gap-3">
+                    <div className="text-center">
+                      <p className="text-xs mb-1" style={{ color: '#8a9e9e' }}>Members</p>
+                      <p className="text-xl font-bold" style={{ color: '#c8e64c', fontFamily: 'Bebas Neue, cursive' }}>
+                        {activeTrip.member_count || 1}
+                      </p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs mb-1" style={{ color: '#8a9e9e' }}>Created</p>
+                      <p className="text-sm font-bold text-white">
+                        {new Date(activeTrip.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                      </p>
+                    </div>
                   </div>
                 </div>
 
-                {/* pricing */}
-                <div className="flex items-center justify-between mb-4">
-                  <div>
-                    <p className="text-xs line-through" style={{ color: '#8a9e9e' }}>
-                      ₹{featuredPackage.originalPrice.toLocaleString()}
-                    </p>
-                    <p
-                      className="text-2xl font-bold"
-                      style={{ color: '#c8e64c', fontFamily: 'Bebas Neue, cursive' }}
-                    >
-                      ₹{featuredPackage.price.toLocaleString()}
-                      <span className="text-xs font-normal text-white/40 ml-1">/person</span>
-                    </p>
-                  </div>
-                  <div
-                    className="px-2 py-1 rounded-full text-xs font-bold"
-                    style={{
-                      backgroundColor: 'rgba(200,230,76,0.15)',
-                      color: '#c8e64c',
-                      border: '1px solid rgba(200,230,76,0.3)'
-                    }}
-                  >
-                    {Math.round((1 - featuredPackage.price / featuredPackage.originalPrice) * 100)}% OFF
+                {/* AI pipeline steps */}
+                <div
+                  className="rounded-2xl p-5"
+                  style={{ backgroundColor: '#1a2222', border: '1px solid rgba(255,255,255,0.06)' }}
+                >
+                  <p className="text-white font-semibold text-sm mb-4">Trip Progress</p>
+                  <div className="flex flex-col gap-3">
+                    {[
+                      { icon: Users, label: 'Invite members', done: true },
+                      { icon: ClipboardList, label: 'Fill preference form', done: false },
+                      { icon: Sparkles, label: 'Generate AI recommendations', done: false },
+                      { icon: Vote, label: 'Group votes on destination', done: false },
+                    ].map(({ icon: Icon, label, done }, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <div
+                          className="w-7 h-7 rounded-full flex items-center justify-center shrink-0"
+                          style={{
+                            backgroundColor: done ? 'rgba(200,230,76,0.2)' : 'rgba(255,255,255,0.05)',
+                            border: `1px solid ${done ? '#c8e64c' : 'rgba(255,255,255,0.1)'}`
+                          }}
+                        >
+                          <Icon size={13} style={{ color: done ? '#c8e64c' : '#8a9e9e' }} />
+                        </div>
+                        <span
+                          className="text-sm"
+                          style={{ color: done ? '#ffffff' : '#8a9e9e' }}
+                        >
+                          {label}
+                        </span>
+                        {done && (
+                          <span className="ml-auto text-xs" style={{ color: '#c8e64c' }}>✓</span>
+                        )}
+                      </div>
+                    ))}
                   </div>
                 </div>
 
-                {/* action buttons */}
-                <div className="flex gap-2 mt-auto">
+                {/* quick actions */}
+                <div className="grid grid-cols-2 gap-3">
                   <button
-                    className="flex-1 py-3 rounded-2xl text-xs font-bold transition-opacity hover:opacity-80"
+                    onClick={() => navigate(`/trips/${activeTrip.id}`)}
+                    className="py-3 rounded-2xl text-sm font-bold transition-opacity hover:opacity-90"
+                    style={{ backgroundColor: '#c8e64c', color: '#131a1a' }}
+                  >
+                    Open Trip →
+                  </button>
+                  <button
+                    onClick={() => navigate('/trips/create')}
+                    className="py-3 rounded-2xl text-sm font-bold transition-opacity hover:opacity-80"
                     style={{
                       backgroundColor: 'rgba(200,230,76,0.1)',
                       color: '#c8e64c',
                       border: '1px solid rgba(200,230,76,0.3)'
                     }}
-                    onClick={() => setFeaturedPackage(
-                      PACKAGES[(PACKAGES.indexOf(featuredPackage) + 1) % PACKAGES.length]
-                    )}
                   >
-                    Learn more
-                  </button>
-                  <button
-                    className="flex-1 py-3 rounded-2xl text-xs font-bold transition-opacity hover:opacity-90"
-                    style={{ backgroundColor: '#c8e64c', color: '#131a1a' }}
-                    onClick={() => navigate(`/trips/create?destination=${featuredPackage.destination}&duration=${featuredPackage.duration}&budget=${featuredPackage.price}`)}
-                  >
-                    Plan Trip →
+                    + New Trip
                   </button>
                 </div>
               </div>
+            )}
+          </div>
+
+          {/* ── RIGHT — POPULAR PACKAGES (secondary) ── */}
+          <div
+            className="col-span-12 lg:col-span-3 flex flex-col"
+            style={{ height: CONTENT_HEIGHT }}
+          >
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <p className="text-white font-semibold text-sm">Popular Packages</p>
+                <p className="text-xs mt-0.5" style={{ color: '#8a9e9e' }}>Inspiration for your next trip</p>
+              </div>
+            </div>
+
+            <div
+              className="flex flex-col gap-3 overflow-y-auto pr-1 flex-1"
+              style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(200,230,76,0.3) transparent' }}
+            >
+              {PACKAGES.map(pkg => (
+                <div
+                  key={pkg.id}
+                  className="rounded-2xl overflow-hidden cursor-pointer transition-all hover:-translate-y-0.5 group shrink-0"
+                  style={{ backgroundColor: '#1a2222', border: '1px solid rgba(255,255,255,0.06)' }}
+                  onClick={() => navigate(`/trips/create?destination=${pkg.destination}&duration=${pkg.duration}&budget=${pkg.price}`)}
+                >
+                  {/* image */}
+                  <div className="relative overflow-hidden" style={{ height: '110px' }}>
+                    <img
+                      src={pkg.image}
+                      alt={pkg.destination}
+                      className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                    <div
+                      className="absolute top-2 left-2 px-2 py-0.5 rounded-full font-bold"
+                      style={{ backgroundColor: '#c8e64c', color: '#131a1a', fontSize: '9px' }}
+                    >
+                      {pkg.tag}
+                    </div>
+                    <div className="absolute bottom-2 right-2">
+                      <p className="font-bold text-sm" style={{ color: '#c8e64c' }}>
+                        ₹{pkg.price.toLocaleString()}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* content */}
+                  <div className="p-3">
+                    <div className="flex items-start justify-between mb-1">
+                      <h4
+                        className="text-base text-white leading-none"
+                        style={{ fontFamily: 'Bebas Neue, cursive' }}
+                      >
+                        {pkg.destination}
+                      </h4>
+                      <div className="flex items-center gap-1">
+                        <Star size={9} fill="#c8e64c" color="#c8e64c" />
+                        <span className="text-xs text-white">{pkg.rating}</span>
+                      </div>
+                    </div>
+                    <p className="text-xs flex items-center gap-1 mb-2" style={{ color: '#8a9e9e' }}>
+                      <Clock size={9} />
+                      {pkg.duration}
+                    </p>
+                    <p className="text-xs mb-3 line-clamp-2 leading-relaxed" style={{ color: '#8a9e9e' }}>
+                      {pkg.description}
+                    </p>
+                    <div
+                      className="flex items-center justify-between pt-2"
+                      style={{ borderTop: '1px solid rgba(255,255,255,0.05)' }}
+                    >
+                      <p className="text-xs line-through" style={{ color: '#8a9e9e' }}>
+                        ₹{pkg.originalPrice.toLocaleString()}
+                      </p>
+                      <span
+                        className="text-xs font-semibold flex items-center gap-1"
+                        style={{ color: '#c8e64c' }}
+                      >
+                        Plan this <ChevronRight size={10} />
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
