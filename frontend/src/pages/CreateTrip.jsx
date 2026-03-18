@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import api from '../services/api'
-import hero from '../assets/hero.jpg'
 import { ArrowLeft } from 'lucide-react'
 
 export default function CreateTrip() {
@@ -25,61 +24,43 @@ export default function CreateTrip() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 relative" style={{ backgroundColor: '#0a0a0a' }}>
-      
-      {/* background */}
-      <img src={hero} alt="background" className="absolute inset-0 w-full h-full object-cover" />
-      <div className="absolute inset-0 bg-black/60" />
+    <div className="min-h-screen flex items-center justify-center p-6" style={{ backgroundColor: '#1a2e1a' }}>
 
       {/* back button */}
       <button
         onClick={() => navigate('/dashboard')}
-        className="absolute top-8 left-8 flex items-center gap-2 text-white/50 hover:text-white transition-colors z-10 text-sm"
+        className="absolute top-8 left-8 flex items-center gap-2 text-sm font-medium transition-opacity hover:opacity-70"
+        style={{ color: '#52b788' }}
       >
         <ArrowLeft size={16} />
-        Back to Dashboard
+        Back
       </button>
 
       {/* card */}
       <div
-        className="w-full max-w-lg relative z-10 rounded-3xl p-10"
-        style={{
-          background: 'rgba(255,255,255,0.08)',
-          backdropFilter: 'blur(24px)',
-          WebkitBackdropFilter: 'blur(24px)',
-          border: '1px solid rgba(255,255,255,0.1)'
-        }}
+        className="w-full max-w-md rounded-3xl p-10"
+        style={{ backgroundColor: '#ffffff', boxShadow: '0 8px 40px rgba(0,0,0,0.2)' }}
       >
-        {/* logo */}
-        <p
-          className="text-sm font-semibold tracking-widest mb-8"
-          style={{ color: '#e63946' }}
-        >
+        <p className="text-sm font-bold tracking-widest mb-8" style={{ color: '#4a7c59' }}>
           VOYANT
         </p>
 
-        <h1
-          className="text-5xl text-white mb-2 leading-tight"
-          style={{ fontFamily: 'Bebas Neue, cursive' }}
-        >
-          CREATE A <br /> NEW TRIP
+        <h1 className="text-5xl font-bold mb-2 leading-tight" style={{ color: '#1a2e1a', fontFamily: 'Bebas Neue, cursive' }}>
+          NEW TRIP
         </h1>
-        <p className="text-white/50 text-sm mb-10">
+        <p className="text-sm mb-8" style={{ color: '#6b8f71' }}>
           Name your adventure and invite your crew
         </p>
 
         {error && (
-          <div
-            className="mb-6 px-4 py-3 rounded-xl text-sm text-white"
-            style={{ backgroundColor: '#e63946aa' }}
-          >
+          <div className="mb-4 px-4 py-3 rounded-xl text-sm text-white" style={{ backgroundColor: '#c0392b' }}>
             {error}
           </div>
         )}
 
         <form onSubmit={handleCreate} className="flex flex-col gap-4">
           <div>
-            <label className="text-white/50 text-xs uppercase tracking-widest mb-2 block">
+            <label className="text-xs font-semibold uppercase tracking-widest mb-2 block" style={{ color: '#6b8f71' }}>
               Trip Name
             </label>
             <input
@@ -88,28 +69,22 @@ export default function CreateTrip() {
               onChange={e => setName(e.target.value)}
               placeholder="eg. Goa Trip 2025"
               required
-              className="w-full px-5 py-4 rounded-2xl text-white placeholder-white/20 outline-none text-sm"
-              style={{
-                background: 'rgba(255,255,255,0.08)',
-                border: '1px solid rgba(255,255,255,0.12)',
-              }}
+              className="w-full px-5 py-4 rounded-2xl text-sm outline-none"
+              style={{ backgroundColor: '#f0f7f0', border: '1.5px solid #d8f3dc', color: '#1a2e1a' }}
             />
           </div>
 
           <div>
-            <label className="text-white/50 text-xs uppercase tracking-widest mb-2 block">
-              Description <span className="text-white/30">(optional)</span>
+            <label className="text-xs font-semibold uppercase tracking-widest mb-2 block" style={{ color: '#6b8f71' }}>
+              Description <span style={{ color: '#b0c4b0' }}>(optional)</span>
             </label>
             <textarea
               value={description}
               onChange={e => setDescription(e.target.value)}
               placeholder="What's the vibe? Who's coming?"
               rows={3}
-              className="w-full px-5 py-4 rounded-2xl text-white placeholder-white/20 outline-none text-sm resize-none"
-              style={{
-                background: 'rgba(255,255,255,0.08)',
-                border: '1px solid rgba(255,255,255,0.12)',
-              }}
+              className="w-full px-5 py-4 rounded-2xl text-sm outline-none resize-none"
+              style={{ backgroundColor: '#f0f7f0', border: '1.5px solid #d8f3dc', color: '#1a2e1a' }}
             />
           </div>
 
@@ -117,7 +92,7 @@ export default function CreateTrip() {
             type="submit"
             disabled={loading}
             className="w-full py-4 text-white font-semibold rounded-2xl text-sm mt-2 transition-opacity hover:opacity-90 disabled:opacity-50"
-            style={{ backgroundColor: '#e63946' }}
+            style={{ backgroundColor: '#4a7c59' }}
           >
             {loading ? 'Creating...' : 'Create Trip →'}
           </button>

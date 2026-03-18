@@ -9,6 +9,10 @@ h1, h2, h3, .font-display {
 }
 
 body {
-  background-color: #0a0a0a;
+  background-color: #131a1a;
   color: #ffffff;
+}
+
+::-webkit-scrollbar {
+  display: none;
 }

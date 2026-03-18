@@ -1,7 +1,8 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
-import { signInWithEmailAndPassword } from 'firebase/auth'
+import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from 'firebase/auth'
 import { auth } from '../services/firebase'
+import api from '../services/api'
 import hero from '../assets/hero.jpg'
 
 export default function Login() {
@@ -24,153 +25,183 @@ export default function Login() {
     setLoading(false)
   }
 
+  async function handleGoogleLogin() {
+    try {
+      const provider = new GoogleAuthProvider()
+      const result = await signInWithPopup(auth, provider)
+      await api.post('/users/register', {
+        name: result.user.displayName,
+        email: result.user.email
+      }).catch(() => {})
+      navigate('/dashboard')
+    } catch (err) {
+      setError('Google sign in failed')
+    }
+  }
+
   return (
-    <div
-      className="min-h-screen w-full flex items-center justify-center p-6 relative"
-    >
+    <div className="min-h-screen w-full relative flex">
+
       {/* full screen background */}
-      <img
-        src={hero}
-        alt="background"
-        className="absolute inset-0 w-full h-full object-cover"
-      />
+      <img src={hero} alt="Adventure" className="absolute inset-0 w-full h-full object-cover" />
+
       {/* dark overlay */}
-      <div className="absolute inset-0 bg-black/50" />
+      <div className="absolute inset-0" style={{ backgroundColor: 'rgba(13, 20, 20, 0.50)' }} />
 
-      {/* card */}
-      <div
-        className="w-full max-w-5xl flex rounded-3xl overflow-hidden shadow-2xl relative z-10"
-        style={{ minHeight: '640px' }}
-      >
-        {/* LEFT — form glass */}
-        <div
-          className="w-full lg:w-1/2 flex flex-col justify-center px-14 py-16"
-          style={{
-            background: 'rgba(255, 255, 255, 0.08)',
-            backdropFilter: 'blur(24px)',
-            WebkitBackdropFilter: 'blur(24px)',
-            borderRight: '1px solid rgba(255,255,255,0.1)'
-          }}
+      {/* navbar */}
+      <div className="absolute top-0 left-0 right-0 flex items-center justify-between px-12 py-6 z-10">
+        <h1
+          className="text-3xl tracking-widest"
+          style={{ fontFamily: 'Bebas Neue, cursive', color: '#c8e64c' }}
         >
-          {/* logo */}
-          <p
-            className="text-sm font-semibold tracking-widest mb-10"
-            style={{ color: '#e63946' }}
+          VOYANT
+        </h1>
+        <Link
+          to="/register"
+          className="text-sm font-medium px-5 py-2 rounded-full transition-opacity hover:opacity-80"
+          style={{ border: '1px solid #c8e64c', color: '#c8e64c' }}
+        >
+          Register
+        </Link>
+      </div>
+
+      {/* main content */}
+      <div className="relative z-10 flex w-full min-h-screen">
+
+        {/* LEFT — big text */}
+        <div className="hidden lg:flex w-1/2 flex-col justify-end px-16 pb-20">
+          <p className="text-sm uppercase tracking-widest mb-4" style={{ color: '#c8e64c' }}>
+            Group Travel Planning
+          </p>
+          <h2
+            className="text-8xl text-white leading-none mb-6"
+            style={{ fontFamily: 'Bebas Neue, cursive' }}
           >
-            VOYANT
+            PLAN YOUR<br />NEXT<br />ADVENTURE
+          </h2>
+          <p className="text-white/50 text-lg max-w-sm">
+            AI powered group decisions. Everyone votes. Best trip wins.
           </p>
-
-          <h1
-            className="text-5xl font-bold text-white mb-2 leading-tight"
-            style={{ fontFamily: 'Inter, sans-serif' }}
-          >
-            Start your <br /> perfect trip
-          </h1>
-
-          <p className="text-white/50 text-sm mb-10">
-            Sign in to plan your next adventure
-          </p>
-
-          {error && (
-            <div
-              className="mb-6 px-4 py-3 rounded-xl text-sm text-white"
-              style={{ backgroundColor: '#e63946aa' }}
-            >
-              {error}
-            </div>
-          )}
-
-          <form onSubmit={handleLogin} className="flex flex-col gap-4">
-            <input
-              type="email"
-              value={email}
-              onChange={e => setEmail(e.target.value)}
-              placeholder="Email"
-              required
-              className="w-full px-5 py-4 rounded-2xl text-white placeholder-white/30 outline-none text-sm"
-              style={{
-                background: 'rgba(255,255,255,0.08)',
-                border: '1px solid rgba(255,255,255,0.12)',
-                backdropFilter: 'blur(8px)'
-              }}
-            />
-
-            <input
-              type="password"
-              value={password}
-              onChange={e => setPassword(e.target.value)}
-              placeholder="Password"
-              required
-              className="w-full px-5 py-4 rounded-2xl text-white placeholder-white/30 outline-none text-sm"
-              style={{
-                background: 'rgba(255,255,255,0.08)',
-                border: '1px solid rgba(255,255,255,0.12)',
-                backdropFilter: 'blur(8px)'
-              }}
-            />
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-4 text-white font-semibold rounded-2xl text-sm mt-2 transition-opacity hover:opacity-90 disabled:opacity-50"
-              style={{ backgroundColor: '#e63946' }}
-            >
-              {loading ? 'Signing in...' : 'Sign In →'}
-            </button>
-          </form>
-
-          <p className="text-white/40 text-sm mt-8 text-center">
-            Don't have an account?{' '}
-            <Link
-              to="/register"
-              className="font-semibold hover:opacity-80 transition-opacity"
-              style={{ color: '#e63946' }}
-            >
-              Register
-            </Link>
-          </p>
+          <div className="mt-10 h-0.5 w-16" style={{ backgroundColor: '#c8e64c' }} />
         </div>
 
-        {/* RIGHT — hero image */}
-        <div className="hidden lg:block w-1/2 relative">
-          <img
-            src={hero}
-            alt="Adventure"
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-black/30" />
-
-          {/* floating card top left */}
+        {/* RIGHT — form */}
+        <div className="w-full lg:w-1/2 flex items-center justify-center px-8 lg:px-16">
           <div
-            className="absolute top-10 left-10 px-5 py-4 rounded-2xl"
+            className="w-full max-w-md rounded-3xl p-10"
             style={{
-              background: 'rgba(255,255,255,0.12)',
-              backdropFilter: 'blur(16px)',
-              border: '1px solid rgba(255,255,255,0.15)'
+              background: 'rgba(13, 20, 20, 0.75)',
+              backdropFilter: 'blur(24px)',
+              WebkitBackdropFilter: 'blur(24px)',
+              border: '1px solid rgba(200, 230, 76, 0.15)',
+              boxShadow: '0 8px 40px rgba(0,0,0,0.4)'
             }}
           >
-            <p className="text-white/60 text-xs uppercase tracking-wider">Destination</p>
-            <p className="text-white font-semibold text-sm mt-1">Explore Together</p>
-          </div>
+            <h3
+              className="text-4xl text-white mb-1"
+              style={{ fontFamily: 'Bebas Neue, cursive' }}
+            >
+              WELCOME BACK
+            </h3>
+            <p className="text-sm mb-8" style={{ color: '#8a9e9e' }}>
+              Sign in to continue your journey
+            </p>
 
-          {/* floating card bottom right */}
-          <div
-            className="absolute bottom-10 right-10 px-5 py-4 rounded-2xl"
-            style={{
-              background: 'rgba(255,255,255,0.12)',
-              backdropFilter: 'blur(16px)',
-              border: '1px solid rgba(255,255,255,0.15)'
-            }}
-          >
-            <p className="text-white font-semibold text-sm">Plan as a group</p>
-            <p className="text-white/60 text-xs mt-1">AI powered decisions</p>
-          </div>
+            {error && (
+              <div
+                className="mb-6 px-4 py-3 rounded-xl text-sm text-white"
+                style={{ backgroundColor: 'rgba(200,60,60,0.3)', border: '1px solid rgba(200,60,60,0.5)' }}
+              >
+                {error}
+              </div>
+            )}
 
-          {/* bottom red accent */}
-          <div
-            className="absolute bottom-0 left-0 right-0 h-1"
-            style={{ backgroundColor: '#e63946' }}
-          />
+            {/* Google button */}
+            <button
+              onClick={handleGoogleLogin}
+              type="button"
+              className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl text-sm font-medium transition-all hover:opacity-80 mb-6"
+              style={{
+                background: 'rgba(255,255,255,0.08)',
+                border: '1px solid rgba(255,255,255,0.12)',
+                color: '#ffffff'
+              }}
+            >
+              <svg width="18" height="18" viewBox="0 0 48 48">
+                <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
+                <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
+                <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
+                <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.36-8.16 2.36-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
+                <path fill="none" d="M0 0h48v48H0z"/>
+              </svg>
+              Continue with Google
+            </button>
+
+            {/* divider */}
+            <div className="flex items-center gap-4 mb-6">
+              <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }} />
+              <span className="text-xs" style={{ color: '#8a9e9e' }}>or continue with email</span>
+              <div className="flex-1 h-px" style={{ backgroundColor: 'rgba(255,255,255,0.08)' }} />
+            </div>
+
+            <form onSubmit={handleLogin} className="flex flex-col gap-4">
+              <div>
+                <label className="text-xs uppercase tracking-widest mb-2 block" style={{ color: '#8a9e9e' }}>
+                  Email
+                </label>
+                <input
+                  type="email"
+                  value={email}
+                  onChange={e => setEmail(e.target.value)}
+                  placeholder="you@example.com"
+                  required
+                  className="w-full px-5 py-4 rounded-2xl text-white placeholder-white/20 outline-none text-sm"
+                  style={{
+                    background: 'rgba(255,255,255,0.06)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                  }}
+                />
+              </div>
+
+              <div>
+                <label className="text-xs uppercase tracking-widest mb-2 block" style={{ color: '#8a9e9e' }}>
+                  Password
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={e => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  required
+                  className="w-full px-5 py-4 rounded-2xl text-white placeholder-white/20 outline-none text-sm"
+                  style={{
+                    background: 'rgba(255,255,255,0.06)',
+                    border: '1px solid rgba(255,255,255,0.1)',
+                  }}
+                />
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full py-4 font-bold rounded-2xl text-sm mt-2 transition-opacity hover:opacity-90 disabled:opacity-50"
+                style={{ backgroundColor: '#c8e64c', color: '#131a1a' }}
+              >
+                {loading ? 'Signing in...' : 'Sign In →'}
+              </button>
+            </form>
+
+            <p className="text-sm mt-6 text-center" style={{ color: '#8a9e9e' }}>
+              Don't have an account?{' '}
+              <Link
+                to="/register"
+                className="font-semibold hover:opacity-80 transition-opacity"
+                style={{ color: '#c8e64c' }}
+              >
+                Create one
+              </Link>
+            </p>
+          </div>
         </div>
       </div>
     </div>
