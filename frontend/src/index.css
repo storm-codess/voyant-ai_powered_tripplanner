@@ -16,3 +16,25 @@ body {
 ::-webkit-scrollbar {
   display: none;
 }
+
+.grid::-webkit-scrollbar {
+  width: 4px;
+}
+.grid::-webkit-scrollbar-track {
+  background: transparent;
+}
+.grid::-webkit-scrollbar-thumb {
+  background: rgba(200,230,76,0.3);
+  border-radius: 4px;
+}
+
+.overflow-y-auto::-webkit-scrollbar {
+  width: 4px;
+}
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: rgba(200,230,76,0.3);
+  border-radius: 4px;
+}
