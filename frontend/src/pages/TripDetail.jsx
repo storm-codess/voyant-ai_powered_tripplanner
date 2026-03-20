@@ -3,10 +3,45 @@ import { useParams, useNavigate } from 'react-router-dom'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 import {
-  ArrowLeft, Users, Plus, Send,
-  ClipboardList, Sparkles, Vote,
-  CheckCircle, Clock, Mail
+  ArrowLeft, Users, ClipboardList,
+  Sparkles, Vote, Plus, Send,
+  CheckCircle, Clock, MapPin,
+  Star, ChevronRight, Zap,
+  Trophy, RefreshCw, Mail
 } from 'lucide-react'
+
+import goaImg from '../assets/destinations/goa.jpg'
+import manaliImg from '../assets/destinations/manali.jpg'
+import jaipurImg from '../assets/destinations/jaipur.jpg'
+import keralaImg from '../assets/destinations/kerala.jpg'
+import travel1 from '../assets/destinations/travel1.jpg'
+import travel2 from '../assets/destinations/travel2.jpg'
+import travel3 from '../assets/destinations/travel3.jpg'
+import travel4 from '../assets/destinations/travel4.jpg'
+
+const destinationImages = {
+  goa: goaImg, manali: manaliImg,
+  jaipur: jaipurImg, kerala: keralaImg,
+  shimla: travel1, ladakh: travel2,
+  rishikesh: travel3, andaman: travel4,
+}
+const fallbackImages = [travel1, travel2, travel3, travel4]
+
+function getTripImage(tripName) {
+  if (!tripName) return fallbackImages[0]
+  const name = tripName.toLowerCase()
+  for (const key of Object.keys(destinationImages)) {
+    if (name.includes(key)) return destinationImages[key]
+  }
+  return fallbackImages[Math.floor(Math.random() * fallbackImages.length)]
+}
+
+const TABS = [
+  { id: 'members', label: 'Members', icon: Users },
+  { id: 'form', label: 'Form', icon: ClipboardList },
+  { id: 'recommendations', label: 'AI Recs', icon: Sparkles },
+  { id: 'votes', label: 'Votes', icon: Vote },
+]
 
 export default function TripDetail() {
   const { id } = useParams()
@@ -19,14 +54,13 @@ export default function TripDetail() {
   const [recommendations, setRecommendations] = useState({})
   const [voteSessions, setVoteSessions] = useState([])
   const [loading, setLoading] = useState(true)
+  const [activeTab, setActiveTab] = useState('members')
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviting, setInviting] = useState(false)
   const [inviteMsg, setInviteMsg] = useState('')
-  const [activeTab, setActiveTab] = useState('overview')
+  const [generating, setGenerating] = useState(false)
 
-  useEffect(() => {
-    fetchAll()
-  }, [id])
+  useEffect(() => { fetchAll() }, [id])
 
   async function fetchAll() {
     try {
@@ -39,7 +73,6 @@ export default function TripDetail() {
       setRecommendations(recsRes.data.recommendations_by_version || {})
       setVoteSessions(votesRes.data.sessions || [])
 
-      // get form if exists
       try {
         const formRes = await api.get(`/forms/${id}/form`)
         setForm(formRes.data)
@@ -70,235 +103,377 @@ export default function TripDetail() {
   }
 
   async function handleGenerateRecs() {
+    setGenerating(true)
     try {
       await api.post(`/recommendations/${id}/generate`)
-      fetchAll()
+      await fetchAll()
     } catch (err) {
-      alert(err.response?.data?.detail || 'Failed to generate recommendations')
+      alert(err.response?.data?.detail || 'Failed to generate')
+    }
+    setGenerating(false)
+  }
+
+  async function handleSendFinalPlan() {
+    try {
+      await api.post(`/votes/${id}/send-final-plan`)
+      alert('Final plan sent to all members!')
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Failed to send')
     }
   }
 
   const isCreator = trip?.creator_id === user?.uid
+  const totalRecs = Object.values(recommendations).flat().length
 
   const statusColor = (status) => {
-    if (status === 'planning') return '#e63946'
+    if (status === 'planning') return '#c8e64c'
     if (status === 'voting') return '#f4a261'
     if (status === 'completed') return '#2a9d8f'
-    return '#e63946'
+    return '#c8e64c'
   }
-
-  const tabs = [
-    { id: 'overview', label: 'Overview', icon: ClipboardList },
-    { id: 'recommendations', label: 'Recommendations', icon: Sparkles },
-    { id: 'votes', label: 'Votes', icon: Vote },
-  ]
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#0a0a0a' }}>
-        <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#e63946', borderTopColor: 'transparent' }} />
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#0f1515' }}>
+        <div className="w-10 h-10 rounded-full border-2 border-t-transparent animate-spin" style={{ borderColor: '#c8e64c', borderTopColor: 'transparent' }} />
       </div>
     )
   }
 
   if (!trip) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#0a0a0a' }}>
-        <p className="text-white/50">Trip not found</p>
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: '#0f1515' }}>
+        <p style={{ color: '#8a9e9e' }}>Trip not found</p>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: '#0a0a0a' }}>
+    <div className="min-h-screen" style={{ backgroundColor: '#0f1515' }}>
 
-      {/* Navbar */}
+      {/* ── NAVBAR ── */}
       <nav
-        className="flex items-center justify-between px-10 py-5 sticky top-0 z-50"
+        className="flex items-center justify-between px-10 py-4 sticky top-0 z-50"
         style={{
-          backgroundColor: 'rgba(10,10,10,0.85)',
+          backgroundColor: 'rgba(15,21,21,0.97)',
           backdropFilter: 'blur(12px)',
           borderBottom: '1px solid rgba(255,255,255,0.06)'
         }}
       >
         <h1
-          className="text-3xl tracking-widest"
-          style={{ fontFamily: 'Bebas Neue, cursive', color: '#e63946' }}
+          className="text-2xl tracking-widest"
+          style={{ fontFamily: 'Bebas Neue, cursive', color: '#c8e64c' }}
         >
           VOYANT
         </h1>
         <button
           onClick={() => navigate('/dashboard')}
-          className="flex items-center gap-2 text-white/50 hover:text-white transition-colors text-sm"
+          className="flex items-center gap-2 text-sm transition-opacity hover:opacity-70"
+          style={{ color: '#8a9e9e' }}
         >
           <ArrowLeft size={16} />
           Dashboard
         </button>
       </nav>
 
-      <div className="px-10 py-10 max-w-6xl mx-auto">
+      {/* ── TRIP HERO ── */}
+      <div className="relative" style={{ height: '220px' }}>
+        <img
+          src={getTripImage(trip.name)}
+          alt={trip.name}
+          className="w-full h-full object-cover"
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent" />
 
-        {/* Trip header */}
-        <div className="mb-10">
-          <div className="flex items-start justify-between">
+        {/* trip info overlay */}
+        <div className="absolute bottom-0 left-0 right-0 px-10 pb-8">
+          <div className="flex items-end justify-between">
             <div>
+              <div className="flex items-center gap-3 mb-2">
+                <span
+                  className="px-3 py-1 rounded-full text-xs font-bold uppercase"
+                  style={{
+                    backgroundColor: statusColor(trip.status) + '33',
+                    color: statusColor(trip.status),
+                    border: `1px solid ${statusColor(trip.status)}`
+                  }}
+                >
+                  {trip.status}
+                </span>
+                <span className="text-white/40 text-xs flex items-center gap-1">
+                  <Users size={10} />
+                  {trip.members?.length || 1} members
+                </span>
+                <span className="text-white/40 text-xs flex items-center gap-1">
+                  <Clock size={10} />
+                  {new Date(trip.created_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </span>
+              </div>
               <h2
-                className="text-6xl text-white leading-none mb-3"
+                className="text-6xl text-white leading-none"
                 style={{ fontFamily: 'Bebas Neue, cursive' }}
               >
                 {trip.name.toUpperCase()}
               </h2>
               {trip.description && (
-                <p className="text-white/40 text-sm mb-4">{trip.description}</p>
+                <p className="text-white/50 text-sm mt-2">{trip.description}</p>
               )}
-              <span
-                className="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider"
-                style={{
-                  backgroundColor: statusColor(trip.status) + '22',
-                  border: `1px solid ${statusColor(trip.status)}`,
-                  color: statusColor(trip.status)
-                }}
-              >
-                {trip.status}
-              </span>
             </div>
 
-            {/* action buttons */}
+            {/* quick actions */}
             <div className="flex gap-3">
               {form?.status === 'published' && !form?.already_submitted && (
                 <button
                   onClick={() => navigate(`/trips/${id}/form`)}
-                  className="flex items-center gap-2 px-5 py-3 text-white text-sm font-semibold rounded-2xl transition-opacity hover:opacity-90"
-                  style={{ backgroundColor: '#e63946' }}
+                  className="flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-bold transition-opacity hover:opacity-90"
+                  style={{ backgroundColor: '#c8e64c', color: '#131a1a' }}
                 >
-                  <ClipboardList size={16} />
+                  <ClipboardList size={15} />
                   Fill Form
                 </button>
               )}
               {isCreator && (
                 <button
                   onClick={handleGenerateRecs}
-                  className="flex items-center gap-2 px-5 py-3 text-white text-sm font-semibold rounded-2xl transition-opacity hover:opacity-90"
-                  style={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
+                  disabled={generating}
+                  className="flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-bold transition-opacity hover:opacity-80 disabled:opacity-50"
+                  style={{
+                    backgroundColor: 'rgba(200,230,76,0.1)',
+                    border: '1px solid rgba(200,230,76,0.3)',
+                    color: '#c8e64c'
+                  }}
                 >
-                  <Sparkles size={16} />
-                  Generate AI Recs
+                  <Sparkles size={15} />
+                  {generating ? 'Generating...' : 'AI Recommend'}
                 </button>
               )}
             </div>
           </div>
         </div>
+      </div>
 
-        {/* Tabs */}
-        <div className="flex gap-1 mb-8 p-1 rounded-2xl w-fit" style={{ backgroundColor: '#1a1a1a' }}>
-          {tabs.map(tab => (
+      {/* ── TABS ── */}
+      <div
+        className="px-10 sticky top-[65px] z-40"
+        style={{
+          backgroundColor: 'rgba(15,21,21,0.97)',
+          backdropFilter: 'blur(12px)',
+          borderBottom: '1px solid rgba(255,255,255,0.06)'
+        }}
+      >
+        <div className="flex gap-1">
+          {TABS.map(tab => (
             <button
               key={tab.id}
               onClick={() => setActiveTab(tab.id)}
-              className="flex items-center gap-2 px-5 py-3 rounded-xl text-sm font-medium transition-all"
-              style={{
-                backgroundColor: activeTab === tab.id ? '#e63946' : 'transparent',
-                color: activeTab === tab.id ? '#ffffff' : 'rgba(255,255,255,0.4)'
-              }}
+              className="flex items-center gap-2 px-6 py-4 text-sm font-medium transition-all relative"
+              style={{ color: activeTab === tab.id ? '#c8e64c' : '#8a9e9e' }}
             >
               <tab.icon size={15} />
               {tab.label}
+              {/* active indicator */}
+              {activeTab === tab.id && (
+                <div
+                  className="absolute bottom-0 left-0 right-0 h-0.5"
+                  style={{ backgroundColor: '#c8e64c' }}
+                />
+              )}
+              {/* badges */}
+              {tab.id === 'recommendations' && totalRecs > 0 && (
+                <span
+                  className="px-1.5 py-0.5 rounded-full text-xs font-bold"
+                  style={{ backgroundColor: '#c8e64c', color: '#131a1a', fontSize: '10px' }}
+                >
+                  {totalRecs}
+                </span>
+              )}
+              {tab.id === 'votes' && voteSessions.length > 0 && (
+                <span
+                  className="px-1.5 py-0.5 rounded-full text-xs font-bold"
+                  style={{ backgroundColor: '#c8e64c', color: '#131a1a', fontSize: '10px' }}
+                >
+                  {voteSessions.length}
+                </span>
+              )}
             </button>
           ))}
         </div>
+      </div>
 
-        {/* Tab content */}
+      {/* ── TAB CONTENT ── */}
+      <div className="px-10 py-10 max-w-6xl mx-auto" style={{ minHeight: 'calc(100vh - 400px)' }}>
 
-        {/* OVERVIEW TAB */}
-        {activeTab === 'overview' && (
+        {/* ── MEMBERS TAB ── */}
+        {activeTab === 'members' && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-            {/* Members card */}
-            <div className="rounded-3xl p-6" style={{ backgroundColor: '#111111', border: '1px solid #1a1a1a' }}>
-              <div className="flex items-center gap-2 mb-6">
-                <Users size={18} style={{ color: '#e63946' }} />
-                <h3 className="text-white font-semibold">Members</h3>
-                <span className="text-white/30 text-xs ml-auto">{trip.members?.length || 0} people</span>
+            {/* members list */}
+            <div
+              className="rounded-3xl p-6"
+              style={{ backgroundColor: '#1a2222', border: '1px solid rgba(255,255,255,0.06)' }}
+            >
+              <div className="flex items-center justify-between mb-6">
+                <h3 className="text-white font-semibold">Trip Members</h3>
+                <span className="text-xs" style={{ color: '#8a9e9e' }}>
+                  {trip.members?.length || 1} people
+                </span>
               </div>
 
               <div className="flex flex-col gap-3 mb-6">
                 {trip.members?.map((member, i) => (
-                  <div key={i} className="flex items-center gap-3">
+                  <div
+                    key={i}
+                    className="flex items-center gap-3 px-4 py-3 rounded-2xl"
+                    style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}
+                  >
                     <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-semibold"
-                      style={{ backgroundColor: '#e63946' }}
+                      className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold shrink-0"
+                      style={{ backgroundColor: member.is_admin ? '#c8e64c' : 'rgba(200,230,76,0.15)', color: member.is_admin ? '#131a1a' : '#c8e64c' }}
                     >
                       {member.user_id?.charAt(0).toUpperCase()}
                     </div>
-                    <div>
-                      <p className="text-white text-sm">{member.user_id}</p>
+                    <div className="flex-1">
+                      <p className="text-white text-sm font-medium">{member.user_id}</p>
                       {member.is_admin && (
-                        <p className="text-white/30 text-xs">Creator</p>
+                        <p className="text-xs" style={{ color: '#c8e64c' }}>Creator</p>
                       )}
                     </div>
+                    {member.is_admin && (
+                      <Trophy size={14} style={{ color: '#c8e64c' }} />
+                    )}
                   </div>
                 ))}
               </div>
 
               {/* invite form — creator only */}
               {isCreator && (
-                <form onSubmit={handleInvite} className="flex gap-2">
-                  <input
-                    type="email"
-                    value={inviteEmail}
-                    onChange={e => setInviteEmail(e.target.value)}
-                    placeholder="Invite by email"
-                    required
-                    className="flex-1 px-4 py-3 rounded-xl text-white placeholder-white/20 outline-none text-sm"
-                    style={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
-                  />
-                  <button
-                    type="submit"
-                    disabled={inviting}
-                    className="px-4 py-3 rounded-xl text-white transition-opacity hover:opacity-90 disabled:opacity-50"
-                    style={{ backgroundColor: '#e63946' }}
-                  >
-                    <Send size={16} />
-                  </button>
-                </form>
-              )}
-              {inviteMsg && (
-                <p className="text-xs mt-2" style={{ color: inviteMsg.startsWith('✅') ? '#2a9d8f' : '#e63946' }}>
-                  {inviteMsg}
-                </p>
+                <div>
+                  <p className="text-xs uppercase tracking-widest mb-3" style={{ color: '#8a9e9e' }}>
+                    Invite Member
+                  </p>
+                  <form onSubmit={handleInvite} className="flex gap-2">
+                    <input
+                      type="email"
+                      value={inviteEmail}
+                      onChange={e => setInviteEmail(e.target.value)}
+                      placeholder="friend@email.com"
+                      required
+                      className="flex-1 px-4 py-3 rounded-xl text-white placeholder-white/20 outline-none text-sm"
+                      style={{ backgroundColor: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
+                    />
+                    <button
+                      type="submit"
+                      disabled={inviting}
+                      className="px-4 py-3 rounded-xl font-bold text-sm transition-opacity hover:opacity-90 disabled:opacity-50"
+                      style={{ backgroundColor: '#c8e64c', color: '#131a1a' }}
+                    >
+                      <Send size={16} />
+                    </button>
+                  </form>
+                  {inviteMsg && (
+                    <p className="text-xs mt-2" style={{ color: inviteMsg.startsWith('✅') ? '#2a9d8f' : '#e63946' }}>
+                      {inviteMsg}
+                    </p>
+                  )}
+                </div>
               )}
             </div>
 
-            {/* Form status card */}
-            <div className="rounded-3xl p-6" style={{ backgroundColor: '#111111', border: '1px solid #1a1a1a' }}>
-              <div className="flex items-center gap-2 mb-6">
-                <ClipboardList size={18} style={{ color: '#e63946' }} />
-                <h3 className="text-white font-semibold">Preference Form</h3>
+            {/* trip progress */}
+            <div
+              className="rounded-3xl p-6"
+              style={{ backgroundColor: '#1a2222', border: '1px solid rgba(255,255,255,0.06)' }}
+            >
+              <h3 className="text-white font-semibold mb-6">Trip Progress</h3>
+              <div className="flex flex-col gap-4">
+                {[
+                  { icon: Users, label: 'Members invited', done: (trip.members?.length || 1) > 1, detail: `${trip.members?.length || 1} members` },
+                  { icon: ClipboardList, label: 'Form published', done: form?.status === 'published', detail: form ? form.status : 'Not created' },
+                  { icon: CheckCircle, label: 'All responses collected', done: formStatus?.all_submitted, detail: formStatus ? `${formStatus.submitted_count}/${formStatus.total_members} submitted` : 'No form yet' },
+                  { icon: Sparkles, label: 'AI recommendations generated', done: totalRecs > 0, detail: totalRecs > 0 ? `${totalRecs} recommendations` : 'Not generated' },
+                  { icon: Vote, label: 'Voting completed', done: voteSessions.some(s => s.status === 'closed'), detail: `${voteSessions.length} sessions` },
+                ].map(({ icon: Icon, label, done, detail }, i) => (
+                  <div key={i} className="flex items-start gap-4">
+
+                    {/* step number + line */}
+                    <div className="flex flex-col items-center">
+                      <div
+                        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0 font-bold text-sm"
+                        style={{
+                          backgroundColor: done ? '#c8e64c' : 'rgba(255,255,255,0.04)',
+                          border: `1px solid ${done ? '#c8e64c' : 'rgba(255,255,255,0.08)'}`,
+                          color: done ? '#131a1a' : '#8a9e9e',
+                          fontFamily: 'Bebas Neue, cursive',
+                          fontSize: '16px'
+                        }}
+                      >
+                        {done ? <CheckCircle size={16} color="#131a1a" /> : String(i + 1).padStart(2, '0')}
+                      </div>
+                      {/* connecting line */}
+                      {i < 4 && (
+                        <div
+                          className="w-0.5 mt-1"
+                          style={{
+                            height: '20px',
+                            backgroundColor: done ? 'rgba(200,230,76,0.3)' : 'rgba(255,255,255,0.06)'
+                          }}
+                        />
+                      )}
+                    </div>
+
+                    <div className="flex-1 pb-2">
+                      <div className="flex items-center gap-2">
+                        <Icon size={13} style={{ color: done ? '#c8e64c' : '#8a9e9e' }} />
+                        <p className="text-sm font-medium" style={{ color: done ? '#ffffff' : '#8a9e9e' }}>
+                          {label}
+                        </p>
+                      </div>
+                      <p className="text-xs mt-0.5 ml-5" style={{ color: '#4a5a5a' }}>{detail}</p>
+                    </div>
+
+                  </div>
+                ))}
               </div>
+            </div>
+          </div>
+        )}
+
+        {/* ── FORM TAB ── */}
+        {activeTab === 'form' && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+
+            {/* form status */}
+            <div
+              className="rounded-3xl p-6"
+              style={{ backgroundColor: '#1a2222', border: '1px solid rgba(255,255,255,0.06)' }}
+            >
+              <h3 className="text-white font-semibold mb-6">Preference Form</h3>
 
               {!form ? (
                 <div className="text-center py-8">
-                  <p className="text-white/30 text-sm mb-4">No form created yet</p>
+                  <ClipboardList size={40} className="mx-auto mb-4 opacity-20" color="white" />
+                  <p className="text-white/30 text-sm mb-2">No form created yet</p>
                   {isCreator && (
                     <button
                       onClick={() => navigate(`/trips/${id}/form`)}
-                      className="flex items-center gap-2 px-5 py-3 text-white text-sm font-semibold rounded-2xl mx-auto transition-opacity hover:opacity-90"
-                      style={{ backgroundColor: '#e63946' }}
+                      className="mt-4 flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-bold mx-auto transition-opacity hover:opacity-90"
+                      style={{ backgroundColor: '#c8e64c', color: '#131a1a' }}
                     >
-                      <Plus size={16} />
+                      <Plus size={15} />
                       Create Form
                     </button>
                   )}
                 </div>
               ) : (
                 <div>
-                  <div className="flex items-center justify-between mb-4">
+                  {/* status badge */}
+                  <div className="flex items-center justify-between mb-5">
                     <span
-                      className="px-3 py-1 rounded-full text-xs font-semibold uppercase"
+                      className="px-3 py-1 rounded-full text-xs font-bold uppercase"
                       style={{
-                        backgroundColor: form.status === 'published' ? '#2a9d8f22' : '#e6394622',
-                        color: form.status === 'published' ? '#2a9d8f' : '#e63946',
-                        border: `1px solid ${form.status === 'published' ? '#2a9d8f' : '#e63946'}`
+                        backgroundColor: form.status === 'published' ? 'rgba(42,157,143,0.2)' : 'rgba(200,230,76,0.1)',
+                        color: form.status === 'published' ? '#2a9d8f' : '#c8e64c',
+                        border: `1px solid ${form.status === 'published' ? '#2a9d8f' : '#c8e64c'}`
                       }}
                     >
                       {form.status}
@@ -306,34 +481,69 @@ export default function TripDetail() {
                     {form.already_submitted && (
                       <span className="flex items-center gap-1 text-xs" style={{ color: '#2a9d8f' }}>
                         <CheckCircle size={12} />
-                        Submitted
+                        You submitted
                       </span>
                     )}
                   </div>
 
+                  {/* progress bar */}
                   {formStatus && (
-                    <div className="mb-4">
-                      <div className="flex justify-between text-xs text-white/40 mb-2">
+                    <div className="mb-6">
+                      <div className="flex justify-between text-xs mb-2" style={{ color: '#8a9e9e' }}>
                         <span>Responses</span>
-                        <span>{formStatus.submitted_count}/{formStatus.total_members}</span>
+                        <span style={{ color: '#c8e64c' }}>{formStatus.submitted_count}/{formStatus.total_members}</span>
                       </div>
-                      <div className="w-full rounded-full h-2" style={{ backgroundColor: '#1a1a1a' }}>
+                      <div className="w-full rounded-full h-2" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
                         <div
                           className="h-2 rounded-full transition-all"
                           style={{
                             width: `${(formStatus.submitted_count / formStatus.total_members) * 100}%`,
-                            backgroundColor: '#e63946'
+                            backgroundColor: '#c8e64c'
                           }}
                         />
+                      </div>
+                      {formStatus.all_submitted && (
+                        <p className="text-xs mt-2 flex items-center gap-1" style={{ color: '#2a9d8f' }}>
+                          <CheckCircle size={11} />
+                          All members have submitted!
+                        </p>
+                      )}
+                    </div>
+                  )}
+
+                  {/* pending members */}
+                  {formStatus?.pending?.length > 0 && (
+                    <div className="mb-5">
+                      <p className="text-xs uppercase tracking-widest mb-2" style={{ color: '#8a9e9e' }}>
+                        Pending
+                      </p>
+                      <div className="flex flex-col gap-2">
+                        {formStatus.pending.map((uid, i) => (
+                          <div
+                            key={i}
+                            className="flex items-center gap-2 px-3 py-2 rounded-xl"
+                            style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}
+                          >
+                            <div
+                              className="w-6 h-6 rounded-full flex items-center justify-center text-xs"
+                              style={{ backgroundColor: 'rgba(255,255,255,0.08)', color: '#8a9e9e' }}
+                            >
+                              {uid.charAt(0).toUpperCase()}
+                            </div>
+                            <p className="text-xs" style={{ color: '#8a9e9e' }}>{uid}</p>
+                            <Clock size={10} className="ml-auto" style={{ color: '#8a9e9e' }} />
+                          </div>
+                        ))}
                       </div>
                     </div>
                   )}
 
+                  {/* fill form button */}
                   {!form.already_submitted && form.status === 'published' && (
                     <button
                       onClick={() => navigate(`/trips/${id}/form`)}
-                      className="w-full py-3 text-white text-sm font-semibold rounded-2xl transition-opacity hover:opacity-90"
-                      style={{ backgroundColor: '#e63946' }}
+                      className="w-full py-3 rounded-2xl text-sm font-bold transition-opacity hover:opacity-90"
+                      style={{ backgroundColor: '#c8e64c', color: '#131a1a' }}
                     >
                       Fill Form →
                     </button>
@@ -341,71 +551,161 @@ export default function TripDetail() {
                 </div>
               )}
             </div>
+
+            {/* form questions preview */}
+            <div
+              className="rounded-3xl p-6"
+              style={{ backgroundColor: '#1a2222', border: '1px solid rgba(255,255,255,0.06)' }}
+            >
+              <h3 className="text-white font-semibold mb-6">Form Questions</h3>
+              {!form ? (
+                <div className="text-center py-8">
+                  <p className="text-white/20 text-sm">No form yet</p>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3 overflow-y-auto" style={{ maxHeight: '400px', scrollbarWidth: 'thin', scrollbarColor: 'rgba(200,230,76,0.3) transparent' }}>
+                  {form.questions?.map((q, i) => (
+                    <div
+                      key={i}
+                      className="px-4 py-3 rounded-2xl"
+                      style={{ backgroundColor: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)' }}
+                    >
+                      <div className="flex items-start gap-3">
+                        <span
+                          className="text-xs font-bold shrink-0 mt-0.5"
+                          style={{ color: '#c8e64c', fontFamily: 'Bebas Neue, cursive', fontSize: '14px' }}
+                        >
+                          {String(i + 1).padStart(2, '0')}
+                        </span>
+                        <div>
+                          <p className="text-white text-sm">{q.question_text}</p>
+                          <p className="text-xs mt-1" style={{ color: '#8a9e9e' }}>
+                            {q.question_type.replace('_', ' ')}
+                            {q.is_required && <span style={{ color: '#c8e64c' }}> · required</span>}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
 
-        {/* RECOMMENDATIONS TAB */}
+        {/* ── RECOMMENDATIONS TAB ── */}
         {activeTab === 'recommendations' && (
           <div>
+            {/* generate button */}
+            {isCreator && (
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <p className="text-white font-semibold">AI Recommendations</p>
+                  <p className="text-xs mt-0.5" style={{ color: '#8a9e9e' }}>
+                    {totalRecs > 0 ? `${totalRecs} destinations generated` : 'Generate destinations based on group preferences'}
+                  </p>
+                </div>
+                <button
+                  onClick={handleGenerateRecs}
+                  disabled={generating}
+                  className="flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-bold transition-opacity hover:opacity-90 disabled:opacity-50"
+                  style={{ backgroundColor: '#c8e64c', color: '#131a1a' }}
+                >
+                  {generating ? (
+                    <RefreshCw size={15} className="animate-spin" />
+                  ) : (
+                    <Sparkles size={15} />
+                  )}
+                  {generating ? 'Generating...' : totalRecs > 0 ? 'Generate More' : 'Generate'}
+                </button>
+              </div>
+            )}
+
             {Object.keys(recommendations).length === 0 ? (
-              <div className="text-center py-20">
+              <div
+                className="rounded-3xl p-12 text-center"
+                style={{ backgroundColor: '#1a2222', border: '1px solid rgba(255,255,255,0.06)' }}
+              >
                 <Sparkles size={40} className="mx-auto mb-4 opacity-20" color="white" />
                 <p className="text-white/30 text-sm mb-2">No recommendations yet</p>
-                <p className="text-white/20 text-xs">Make sure all members fill the form first</p>
-                {isCreator && (
-                  <button
-                    onClick={handleGenerateRecs}
-                    className="mt-6 flex items-center gap-2 px-6 py-3 text-white text-sm font-semibold rounded-2xl mx-auto transition-opacity hover:opacity-90"
-                    style={{ backgroundColor: '#e63946' }}
-                  >
-                    <Sparkles size={16} />
-                    Generate Recommendations
-                  </button>
-                )}
+                <p className="text-white/20 text-xs">
+                  Make sure all members fill the preference form first
+                </p>
               </div>
             ) : (
               Object.entries(recommendations).map(([version, recs]) => (
-                <div key={version} className="mb-10">
-                  <p className="text-white/30 text-xs uppercase tracking-widest mb-4">
+                <div key={version} className="mb-8">
+                  <p
+                    className="text-xs uppercase tracking-widest mb-4"
+                    style={{ color: '#8a9e9e' }}
+                  >
                     Generation {version}
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {recs.map((rec, i) => (
                       <div
                         key={i}
-                        className="rounded-3xl p-6"
-                        style={{ backgroundColor: '#111111', border: '1px solid #1a1a1a' }}
+                        className="rounded-3xl overflow-hidden"
+                        style={{ backgroundColor: '#1a2222', border: '1px solid rgba(255,255,255,0.06)' }}
                       >
-                        <div className="flex items-start justify-between mb-3">
-                          <h4
-                            className="text-2xl text-white"
-                            style={{ fontFamily: 'Bebas Neue, cursive' }}
-                          >
-                            {rec.destination.toUpperCase()}
-                          </h4>
+                        {/* destination image */}
+                        <div className="relative" style={{ height: '140px' }}>
+                          <img
+                            src={getTripImage(rec.destination)}
+                            alt={rec.destination}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
+                          <div className="absolute bottom-3 left-4">
+                            <h4
+                              className="text-2xl text-white leading-none"
+                              style={{ fontFamily: 'Bebas Neue, cursive' }}
+                            >
+                              {rec.destination.toUpperCase()}
+                            </h4>
+                          </div>
                         </div>
-                        <p className="text-white/50 text-xs mb-4 leading-relaxed">
-                          {rec.reasoning}
-                        </p>
-                        {rec.activities && (
-                          <div className="flex flex-wrap gap-2 mb-4">
-                            {rec.activities.slice(0, 3).map((a, j) => (
-                              <span
-                                key={j}
-                                className="px-2 py-1 rounded-full text-xs"
-                                style={{ backgroundColor: '#e6394622', color: '#e63946', border: '1px solid #e6394644' }}
-                              >
-                                {a}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-                        {rec.estimated_budget && (
-                          <div className="text-xs text-white/30">
-                            <p>🏨 {rec.estimated_budget.hotel_per_night}</p>
-                            <p>✈️ {rec.estimated_budget.transport_from_major_city}</p>
-                          </div>
-                        )}
+
+                        <div className="p-5">
+                          <p className="text-xs mb-4 leading-relaxed" style={{ color: '#8a9e9e' }}>
+                            {rec.reasoning}
+                          </p>
+
+                          {/* activities */}
+                          {rec.activities && (
+                            <div className="flex flex-wrap gap-1.5 mb-4">
+                              {rec.activities.slice(0, 3).map((a, j) => (
+                                <span
+                                  key={j}
+                                  className="px-2 py-1 rounded-full text-xs"
+                                  style={{
+                                    backgroundColor: 'rgba(200,230,76,0.08)',
+                                    color: '#c8e64c',
+                                    border: '1px solid rgba(200,230,76,0.15)',
+                                    fontSize: '10px'
+                                  }}
+                                >
+                                  {a}
+                                </span>
+                              ))}
+                            </div>
+                          )}
+
+                          {/* budget */}
+                          {rec.estimated_budget && (
+                            <div
+                              className="px-3 py-2 rounded-xl text-xs"
+                              style={{ backgroundColor: 'rgba(255,255,255,0.03)' }}
+                            >
+                              <p style={{ color: '#8a9e9e' }}>
+                                🏨 {rec.estimated_budget.hotel_per_night}
+                              </p>
+                              <p className="mt-0.5" style={{ color: '#8a9e9e' }}>
+                                ✈️ {rec.estimated_budget.transport_from_major_city}
+                              </p>
+                            </div>
+                          )}
+                        </div>
                       </div>
                     ))}
                   </div>
@@ -415,21 +715,59 @@ export default function TripDetail() {
           </div>
         )}
 
-        {/* VOTES TAB */}
+        {/* ── VOTES TAB ── */}
         {activeTab === 'votes' && (
           <div>
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <p className="text-white font-semibold">Vote Sessions</p>
+                <p className="text-xs mt-0.5" style={{ color: '#8a9e9e' }}>
+                  Group decisions on trip details
+                </p>
+              </div>
+              <div className="flex gap-3">
+                {voteSessions.some(s => s.status === 'closed') && isCreator && (
+                  <button
+                    onClick={handleSendFinalPlan}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-80"
+                    style={{
+                      backgroundColor: 'rgba(42,157,143,0.15)',
+                      color: '#2a9d8f',
+                      border: '1px solid rgba(42,157,143,0.3)'
+                    }}
+                  >
+                    <Mail size={14} />
+                    Send Final Plan
+                  </button>
+                )}
+                {isCreator && (
+                  <button
+                    onClick={() => navigate(`/trips/${id}/vote`)}
+                    className="flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-opacity hover:opacity-90"
+                    style={{ backgroundColor: '#c8e64c', color: '#131a1a' }}
+                  >
+                    <Plus size={14} />
+                    New Vote
+                  </button>
+                )}
+              </div>
+            </div>
+
             {voteSessions.length === 0 ? (
-              <div className="text-center py-20">
+              <div
+                className="rounded-3xl p-12 text-center"
+                style={{ backgroundColor: '#1a2222', border: '1px solid rgba(255,255,255,0.06)' }}
+              >
                 <Vote size={40} className="mx-auto mb-4 opacity-20" color="white" />
                 <p className="text-white/30 text-sm mb-2">No vote sessions yet</p>
                 {isCreator && (
                   <button
                     onClick={() => navigate(`/trips/${id}/vote`)}
-                    className="mt-6 flex items-center gap-2 px-6 py-3 text-white text-sm font-semibold rounded-2xl mx-auto transition-opacity hover:opacity-90"
-                    style={{ backgroundColor: '#e63946' }}
+                    className="mt-4 flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-bold mx-auto transition-opacity hover:opacity-90"
+                    style={{ backgroundColor: '#c8e64c', color: '#131a1a' }}
                   >
-                    <Plus size={16} />
-                    Create Vote Session
+                    <Plus size={15} />
+                    Create First Vote
                   </button>
                 )}
               </div>
@@ -439,21 +777,32 @@ export default function TripDetail() {
                   <div
                     key={session.session_id}
                     className="rounded-3xl p-6"
-                    style={{ backgroundColor: '#111111', border: '1px solid #1a1a1a' }}
+                    style={{ backgroundColor: '#1a2222', border: '1px solid rgba(255,255,255,0.06)' }}
                   >
-                    <div className="flex items-start justify-between mb-4">
+                    <div className="flex items-start justify-between mb-5">
                       <div>
-                        <h4 className="text-white font-semibold mb-1">{session.title}</h4>
+                        <h4 className="text-white font-semibold text-base">{session.title}</h4>
                         {session.description && (
-                          <p className="text-white/40 text-xs">{session.description}</p>
+                          <p className="text-xs mt-1" style={{ color: '#8a9e9e' }}>{session.description}</p>
                         )}
+                        <div className="flex items-center gap-3 mt-2">
+                          <span className="text-xs" style={{ color: '#8a9e9e' }}>
+                            {sum(session.vote_counts)} votes
+                          </span>
+                          {session.deadline && (
+                            <span className="text-xs flex items-center gap-1" style={{ color: '#8a9e9e' }}>
+                              <Clock size={9} />
+                              {new Date(session.deadline).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}
+                            </span>
+                          )}
+                        </div>
                       </div>
                       <span
-                        className="px-3 py-1 rounded-full text-xs font-semibold uppercase"
+                        className="px-3 py-1 rounded-full text-xs font-bold uppercase"
                         style={{
-                          backgroundColor: session.status === 'closed' ? '#2a9d8f22' : '#e6394622',
-                          color: session.status === 'closed' ? '#2a9d8f' : '#e63946',
-                          border: `1px solid ${session.status === 'closed' ? '#2a9d8f' : '#e63946'}`
+                          backgroundColor: session.status === 'closed' ? 'rgba(42,157,143,0.2)' : 'rgba(200,230,76,0.1)',
+                          color: session.status === 'closed' ? '#2a9d8f' : '#c8e64c',
+                          border: `1px solid ${session.status === 'closed' ? '#2a9d8f' : '#c8e64c'}`
                         }}
                       >
                         {session.status}
@@ -461,73 +810,95 @@ export default function TripDetail() {
                     </div>
 
                     {/* options */}
-                    <div className="flex flex-col gap-2">
-                      {session.options.map(option => (
-                        <div
-                          key={option.id}
-                          className="flex items-center justify-between px-4 py-3 rounded-xl"
-                          style={{
-                            backgroundColor: option.id === session.winner_option_id ? '#2a9d8f22' : '#1a1a1a',
-                            border: `1px solid ${option.id === session.winner_option_id ? '#2a9d8f' : '#2a2a2a'}`
-                          }}
-                        >
-                          <span className="text-white text-sm">{option.text}</span>
-                          <div className="flex items-center gap-3">
-                            <span className="text-white/30 text-xs">{option.votes} votes</span>
-                            {option.id === session.winner_option_id && (
-                              <CheckCircle size={14} color="#2a9d8f" />
-                            )}
-                            {session.status === 'open' && option.id !== session.user_voted && (
-                              <button
-                                onClick={async () => {
-                                  await api.post(`/votes/${id}/cast`, { option_id: option.id })
-                                  fetchAll()
+                    <div className="flex flex-col gap-2 mb-4">
+                      {session.options?.map(option => {
+                        const totalVotes = sum(session.vote_counts)
+                        const optionVotes = option.votes || 0
+                        const percentage = totalVotes > 0 ? (optionVotes / totalVotes) * 100 : 0
+                        const isWinner = option.id === session.winner_option_id
+                        const isUserVote = option.id === session.user_voted
+
+                        return (
+                          <div
+                            key={option.id}
+                            className="px-4 py-3 rounded-2xl"
+                            style={{
+                              backgroundColor: isWinner ? 'rgba(42,157,143,0.1)' : 'rgba(255,255,255,0.03)',
+                              border: `1px solid ${isWinner ? 'rgba(42,157,143,0.4)' : isUserVote ? 'rgba(200,230,76,0.3)' : 'rgba(255,255,255,0.06)'}`
+                            }}
+                          >
+                            <div className="flex items-center justify-between mb-2">
+                              <div className="flex items-center gap-2">
+                                <span className="text-white text-sm">{option.text}</span>
+                                {isWinner && <Trophy size={12} style={{ color: '#2a9d8f' }} />}
+                                {isUserVote && !isWinner && (
+                                  <span className="text-xs" style={{ color: '#c8e64c' }}>✓ Your vote</span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="text-xs" style={{ color: '#8a9e9e' }}>
+                                  {optionVotes} votes
+                                </span>
+                                {session.status === 'open' && !isUserVote && (
+                                  <button
+                                    onClick={async () => {
+                                      await api.post(`/votes/${id}/cast`, { option_id: option.id })
+                                      fetchAll()
+                                    }}
+                                    className="px-3 py-1 rounded-lg text-xs font-bold transition-opacity hover:opacity-90"
+                                    style={{ backgroundColor: '#c8e64c', color: '#131a1a' }}
+                                  >
+                                    Vote
+                                  </button>
+                                )}
+                              </div>
+                            </div>
+                            {/* progress bar */}
+                            <div className="w-full rounded-full h-1" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
+                              <div
+                                className="h-1 rounded-full transition-all"
+                                style={{
+                                  width: `${percentage}%`,
+                                  backgroundColor: isWinner ? '#2a9d8f' : '#c8e64c'
                                 }}
-                                className="px-3 py-1 rounded-lg text-xs text-white transition-opacity hover:opacity-90"
-                                style={{ backgroundColor: '#e63946' }}
-                              >
-                                Vote
-                              </button>
-                            )}
-                            {option.id === session.user_voted && (
-                              <span className="text-xs" style={{ color: '#e63946' }}>✓ Voted</span>
-                            )}
+                              />
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        )
+                      })}
                     </div>
 
-                    {/* close button for creator */}
+                    {/* close button */}
                     {isCreator && session.status !== 'closed' && (
                       <button
                         onClick={async () => {
                           await api.post(`/votes/${id}/close/${session.session_id}`)
                           fetchAll()
                         }}
-                        className="mt-4 px-5 py-2 text-white text-xs font-semibold rounded-xl transition-opacity hover:opacity-90"
-                        style={{ backgroundColor: '#1a1a1a', border: '1px solid #2a2a2a' }}
+                        className="px-4 py-2 text-xs font-bold rounded-xl transition-opacity hover:opacity-80"
+                        style={{
+                          backgroundColor: 'rgba(255,255,255,0.04)',
+                          border: '1px solid rgba(255,255,255,0.08)',
+                          color: '#8a9e9e'
+                        }}
                       >
                         Close Voting
                       </button>
                     )}
                   </div>
                 ))}
-
-                {isCreator && (
-                  <button
-                    onClick={() => navigate(`/trips/${id}/vote`)}
-                    className="flex items-center gap-2 px-6 py-3 text-white text-sm font-semibold rounded-2xl w-fit transition-opacity hover:opacity-90"
-                    style={{ backgroundColor: '#e63946' }}
-                  >
-                    <Plus size={16} />
-                    New Vote Session
-                  </button>
-                )}
               </div>
             )}
           </div>
         )}
+
       </div>
     </div>
   )
+}
+
+// helper
+function sum(obj) {
+  if (!obj) return 0
+  return Object.values(obj).reduce((a, b) => a + b, 0)
 }
