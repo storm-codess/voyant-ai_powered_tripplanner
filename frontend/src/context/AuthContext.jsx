@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState } from 'react'
 import { auth } from '../services/firebase'
 import { onAuthStateChanged } from 'firebase/auth'
+import PageLoader from '../components/PageLoader'
 
 const AuthContext = createContext()
 
@@ -16,9 +17,11 @@ export function AuthProvider({ children }) {
     return unsubscribe
   }, [])
 
+  if (loading) return <PageLoader />
+
   return (
     <AuthContext.Provider value={{ user, loading }}>
-      {!loading && children}
+      {children}
     </AuthContext.Provider>
   )
 }
