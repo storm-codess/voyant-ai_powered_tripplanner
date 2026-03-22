@@ -122,6 +122,33 @@ export default function TripDetail() {
     }
   }
 
+  async function handleCreateForm() {
+    try {
+      // get templates first
+      const templatesRes = await api.get('/forms/templates')
+      const templates = templatesRes.data
+
+      // use Weekend Trip template by default (first non-custom)
+      const template = templates.find(t => !t.is_custom) || templates[0]
+
+      // create form
+      await api.post(`/forms/${id}/create`, {
+        template_id: template.id,
+        title: `${trip.name} Preferences`,
+        description: 'Fill this form to help us plan the perfect trip!'
+      })
+
+      // publish immediately
+      await api.post(`/forms/${id}/publish`)
+
+      // refresh
+      await fetchAll()
+      alert('✅ Form created and published! Members can now fill it.')
+    } catch (err) {
+      alert(err.response?.data?.detail || 'Failed to create form')
+    }
+  }
+
   const isCreator = trip?.creator_id === user?.uid
   const totalRecs = Object.values(recommendations).flat().length
 
@@ -455,7 +482,7 @@ export default function TripDetail() {
                   <p className="text-white/30 text-sm mb-2">No form created yet</p>
                   {isCreator && (
                     <button
-                      onClick={() => navigate(`/trips/${id}/form`)}
+                      onClick={handleCreateForm}
                       className="mt-4 flex items-center gap-2 px-5 py-3 rounded-2xl text-sm font-bold mx-auto transition-opacity hover:opacity-90"
                       style={{ backgroundColor: '#c8e64c', color: '#131a1a' }}
                     >
